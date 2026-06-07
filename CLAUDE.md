@@ -68,11 +68,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **用户确认满意后**（用户说"可以了"/"没问题"/"满意"等确认信号），执行：
 
 ```bash
-# 提交并推送至 GitHub
+# 提交代码
 git add .
 git commit -m "修改内容描述"
-git push origin main
+
+# 推送至 Gitee（如果失败则重试，直到成功）
+git remote set-url origin https://zhangzhaosix:67bf099824482a5c5740ebfd16ca3260@gitee.com/zhangzhaosix/personal_-projects_-collection.git
+git push || git push || git push
+
+# 推送至 GitHub（如果失败则重试，直到成功）
+git remote set-url origin https://github.com/zhangzhaosix/Personal_Projects_Collection.git
+git push || git push || git push
 ```
+
+> **推送规则**：必须分别推送至 Gitee 和 GitHub 两个仓库。如果推送失败，就一直重试直到成功为止。两个仓库的远程地址会在推送时切换。
 
 **Gitee Pages 部署（国内访问）**：
 1. 在 [gitee.com](https://gitee.com) 创建同名私有仓库
