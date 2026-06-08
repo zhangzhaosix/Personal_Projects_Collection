@@ -28,6 +28,10 @@
   <!-- 浮动管理按钮 -->
   <button class="fab" id="fabManage" title="管理模式">⚙</button>
   <button class="fab-add" id="fabAdd" title="添加作品">+</button>
+  <button class="fab-settings" id="fabSettings" title="GitHub 设置" style="display:none;">🔑</button>
+
+  <!-- Toast 通知 -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <!-- 密码验证模态框 -->
   <div class="modal-overlay" id="passwordModal">
@@ -69,6 +73,31 @@
       <div class="modal-footer" style="justify-content:center;">
         <button class="btn btn-outline" id="btnConfirmCancel">取消</button>
         <button class="btn btn-danger" id="btnConfirmDelete">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub 设置模态框 -->
+  <div class="modal-overlay" id="githubSettingsModal">
+    <div class="modal-box" style="max-width:460px;">
+      <div class="modal-title" style="text-align:center;">GitHub 自动同步设置</div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:rgba(26,42,74,0.6);margin-bottom:8px;line-height:1.6;">
+          配置后，添加/编辑/删除作品时将自动同步到仓库的 <code>data.json</code>。
+        </p>
+        <input type="password" class="input-field" id="inputGithubToken" placeholder="GitHub Personal Access Token" style="text-align:center;font-size:14px;">
+        <p style="font-size:12px;color:rgba(26,42,74,0.45);margin-top:6px;line-height:1.5;text-align:center;">
+          需要 Token 在 GitHub 创建 →
+          <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;">
+            创建 Token
+          </a>
+          <br>权限选 <code>Contents</code>（写入），仓库选 <code>Personal_Projects_Collection</code>
+        </p>
+        <p id="tokenStatus" style="text-align:center;font-size:13px;margin-top:8px;display:none;"></p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <button class="btn btn-outline" id="btnTokenCancel">取消</button>
+        <button class="btn btn-solid" id="btnTokenSave">保存</button>
       </div>
     </div>
   </div>
