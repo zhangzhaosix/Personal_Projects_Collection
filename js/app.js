@@ -116,7 +116,19 @@ function getData() {
     saveData(DEFAULT_DATA);
     return JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
-  return JSON.parse(raw);
+
+  const data = JSON.parse(raw);
+
+  // 迁移：如果 localStorage 为空数据但默认数据有内容，替换之
+  // 这修复了旧版本 localStorage 缓存了空数据导致页面空白的问题
+  const hasProjects = data.categories.some(c => c.projects && c.projects.length > 0);
+  const defaultHasProjects = DEFAULT_DATA.categories.some(c => c.projects && c.projects.length > 0);
+  if (!hasProjects && defaultHasProjects) {
+    saveData(DEFAULT_DATA);
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+
+  return data;
 }
 
 function saveData(data) {
