@@ -10,7 +10,7 @@ const ADMIN_PASSWORD = '741021';  // ← 管理员密码，可自行修改
 const GITHUB_OWNER = 'zhangzhaosix';
 const GITHUB_REPO = 'Personal_Projects_Collection';
 const GITHUB_FILE_PATH = 'data.json';
-const GITHUB_BRANCH = 'main';
+const GITHUB_BRANCH = 'master';
 
 function getGithubToken() {
   return localStorage.getItem('github-token') || '';
@@ -31,10 +31,95 @@ function getData() {
   const raw = localStorage.getItem('portfolio-data');
   if (!raw) {
     const defaultData = {
-      categories: [
-        { id: 'data-analysis', name: '数据分析项目', projects: [] },
-        { id: 'agent',         name: 'Agent项目',     projects: [] },
-        { id: 'ai-learning',   name: 'AI学习合集',     projects: [] }
+      "categories": [
+        {
+          "id": "data-analysis",
+          "name": "数据分析项目",
+          "projects": [
+            {
+              "id": "p_1780814882051_z593",
+              "name": "【抖音 达人种草 数据分析 自动化报表】",
+              "url": "https://vcnnr111xqu6.feishu.cn/sheets/Tc2psCbP0hnjAOtWFrjc5wzNnTd?from=from_copylink",
+              "description": "原有的表格指标混乱、颗粒度不一致，无法直观呈现种草转化效果急需一份结果前置、逻辑清晰的复盘分析报表",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780841238422_ic9b",
+              "name": "【抖音电商 数据监控 BI看板】",
+              "url": "https://vcnnr111xqu6.feishu.cn/docx/NqNhdQzscoLOYIxxRDYcvrJRnkf?from=from_copylink",
+              "description": "多个维度（声量、转化、人群资产）呈现当前种草效果的BI看板",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780841697010_p9ip",
+              "name": "电商 达人种草 洞察分析 报告",
+              "url": "https://vcnnr111xqu6.feishu.cn/docx/LVhedyuJmoCzU4xZnFZcEDe9nnh",
+              "description": "当时骆驼户外品牌 在抖音开展达人种草投放，对标安德玛、凯乐石、伯希和 三大竞品，急需通过数据复盘解决 3 个核心问题：\n1：本次种草投放的真实效果如何，和竞品差距在哪？\n2：哪些达人、哪些内容赛道是高效的，哪些在浪费预算？\n3：如何用数据定位优化点，给业务端提供可落地的投放策略？",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780843960501_2nmq",
+              "name": "抖音 电商直播 用户行为 分析",
+              "url": "https://vcnnr111xqu6.feishu.cn/mindnotes/ZVrMbJCjxmKnMFnzIqKc5aENnLg",
+              "description": "基于用户体验对用户动作进行了详细的拆解，通过优化用户观看体验、提升互动率为核心抓手，驱动直播GMV增长",
+              "createdAt": "2026-06-07"
+            }
+          ]
+        },
+        {
+          "id": "agent",
+          "name": "Agent项目",
+          "projects": [
+            {
+              "id": "p_1780815946402_ep9l",
+              "name": "日常清单网页",
+              "url": "https://zhangzhaosix.github.io/task-list/",
+              "description": "记录每日必做、临时事件、长期规划、思维模式",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780815955322_a4sh",
+              "name": "音乐合集",
+              "url": "http://127.0.0.1:5000/",
+              "description": "记录我爱听的歌曲",
+              "createdAt": "2026-06-07"
+            }
+          ]
+        },
+        {
+          "id": "ai-learning",
+          "name": "AI学习合集",
+          "projects": [
+            {
+              "id": "p_1780816143260_qtp7",
+              "name": "AI笔记整理",
+              "url": "https://vcnnr111xqu6.feishu.cn/mindnotes/Z0Emb4noVm23yDnXMsjcBwxBnTe",
+              "description": "从YouTube、B站、抖音等渠道学习到的\n纯个人爱好",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780816383108_a1y1",
+              "name": "api合集1",
+              "url": "https://api.daheiai.com/#official",
+              "description": "推荐",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780816434004_isz1",
+              "name": "api合集2",
+              "url": "http://wang.aihaochi.com/",
+              "description": "便宜",
+              "createdAt": "2026-06-07"
+            },
+            {
+              "id": "p_1780843810802_b7vx",
+              "name": "claude.md",
+              "url": "https://vcnnr111xqu6.feishu.cn/docx/KAJLd61qBoCxZyxRKOBcmAIrnxd",
+              "description": "经常使用",
+              "createdAt": "2026-06-07"
+            }
+          ]
+        }
       ]
     };
     saveData(defaultData);
