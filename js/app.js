@@ -3,7 +3,10 @@
    ============================================ */
 
 // --- 默认分类数据（嵌入 data.json 内容，确保首次访问有数据） ---
+const DATA_VERSION = 'v2'; // 数据版本号，修改默认数据时递增以覆盖旧缓存
 const DEFAULT_DATA = {
+  _version: DATA_VERSION,
+  "categories": [
   "categories": [
     {
       "id": "data-analysis",
@@ -119,11 +122,8 @@ function getData() {
 
   const data = JSON.parse(raw);
 
-  // 迁移：如果 localStorage 为空数据但默认数据有内容，替换之
-  // 这修复了旧版本 localStorage 缓存了空数据导致页面空白的问题
-  const hasProjects = data.categories.some(c => c.projects && c.projects.length > 0);
-  const defaultHasProjects = DEFAULT_DATA.categories.some(c => c.projects && c.projects.length > 0);
-  if (!hasProjects && defaultHasProjects) {
+  // 版本检查：版本不匹配时用默认数据覆盖（确保旧缓存数据能更新）
+  if (data._version !== DATA_VERSION) {
     saveData(DEFAULT_DATA);
     return JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
