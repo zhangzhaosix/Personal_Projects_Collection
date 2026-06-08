@@ -11,6 +11,19 @@ const DEFAULT_DATA = {
   ]
 };
 
+// --- 从 data.json 初始数据（仅首次访问时） ---
+async function seedFromDataJson() {
+  if (localStorage.getItem('portfolio-data')) return;
+  try {
+    const res = await fetch('data.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    saveData(data);
+  } catch (e) {
+    // data.json 不存在时静默忽略
+  }
+}
+
 // --- 数据管理 ---
 function getData() {
   const raw = localStorage.getItem('portfolio-data');
@@ -189,7 +202,8 @@ function initVisitorCounter() {
 }
 
 // --- DOM 就绪 ---
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  await seedFromDataJson();
   renderCategories();
   initScrollReveal();
   initTypewriter();

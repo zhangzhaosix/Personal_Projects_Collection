@@ -71,6 +71,19 @@ function initScrollReveal() {
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
+// ===== 从 data.json 初始数据（仅首次访问时） =====
+async function seedFromDataJson() {
+  if (localStorage.getItem('portfolio-data')) return;
+  try {
+    const res = await fetch('data.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    saveData(data);
+  } catch (e) {
+    // data.json 不存在时静默忽略
+  }
+}
+
 // ===== 页面初始化 =====
 function loadCategory() {
   const catId = getCategoryIdFromUrl();
@@ -287,7 +300,8 @@ window.editProject = function(id) {
 window.confirmDelete = confirmDelete;
 
 // ===== 事件绑定 =====
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  await seedFromDataJson();
   loadCategory();
 
   // 管理模式
