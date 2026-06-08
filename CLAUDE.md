@@ -64,6 +64,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **仓库可见性**：私人（Private）仓库，仅自己可访问代码
 - **仓库名**：`Personal_Projects_Collection`
+- **部署方式**：GitHub Pages（推送即自动部署）
+- **访问地址**：`https://zhangzhaosix.github.io/Personal_Projects_Collection/`
 
 **用户确认满意后**（用户说"可以了"/"没问题"/"满意"等确认信号），执行：
 
@@ -72,19 +74,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 git add .
 git commit -m "修改内容描述"
 
-# 推送至 Gitee（如果失败则重试，直到成功）
-git remote set-url origin https://zhangzhaosix:67bf099824482a5c5740ebfd16ca3260@gitee.com/zhangzhaosix/personal_-projects_-collection.git
-git push || git push || git push
-
-# 推送至 GitHub（如果失败则重试，直到成功）
-git remote set-url origin https://github.com/zhangzhaosix/Personal_Projects_Collection.git
+# 推送到 GitHub（GitHub Pages 会自动重新部署）
 git push || git push || git push
 ```
 
-> **推送规则**：必须分别推送至 Gitee 和 GitHub 两个仓库。如果推送失败，就一直重试直到成功为止。两个仓库的远程地址会在推送时切换。
-
-**Gitee Pages 部署（国内访问）**：
-1. 在 [gitee.com](https://gitee.com) 创建同名私有仓库
-2. 从 GitHub 同步代码到 Gitee
-3. 进入仓库 → 服务 → Gitee Pages → 选择 main 分支 → 开启
-4. 获得 `https://{用户名}.gitee.io/personal_projects_collection` 访问地址
+> **推送规则**：远程地址已固定为 GitHub，无需再切换。如果推送失败，就一直重试直到成功为止。
