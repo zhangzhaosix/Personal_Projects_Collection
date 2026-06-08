@@ -7,7 +7,6 @@ const DATA_VERSION = 'v2'; // 数据版本号，修改默认数据时递增以�
 const DEFAULT_DATA = {
   _version: DATA_VERSION,
   "categories": [
-  "categories": [
     {
       "id": "data-analysis",
       "name": "数据分析项目",
