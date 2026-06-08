@@ -328,6 +328,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('inputDesc').focus(); }
   });
   document.getElementById('inputDesc').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveProject(); }
+    if (e.key === 'Enter') {
+      if (e.ctrlKey || e.shiftKey) {
+        // Ctrl+Enter / Shift+Enter → 手动插入换行
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.slice(0, start) + '\n' + this.value.slice(end);
+        this.selectionStart = this.selectionEnd = start + 1;
+      } else {
+        // Enter → 保存
+        e.preventDefault();
+        saveProject();
+      }
+    }
   });
 });
