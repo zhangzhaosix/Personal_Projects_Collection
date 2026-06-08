@@ -6,20 +6,6 @@
 // ===== 配置区 =====
 const ADMIN_PASSWORD = '741021';  // ← 管理员密码，可自行修改
 
-// ===== GitHub 配置 =====
-const GITHUB_OWNER = 'zhangzhaosix';
-const GITHUB_REPO = 'Personal_Projects_Collection';
-const GITHUB_FILE_PATH = 'data.json';
-const GITHUB_BRANCH = 'master';
-
-function getGithubToken() {
-  return localStorage.getItem('github-token') || '';
-}
-
-function saveGithubToken(token) {
-  localStorage.setItem('github-token', token);
-}
-
 // ===== 状态 =====
 let currentCategory = null;
 let isAdminMode = false;
@@ -160,15 +146,6 @@ function showToast(message, type, duration = 3000) {
   }
 }
 
-function hideLoadingToast() {
-  const container = document.getElementById('toastContainer');
-  const loading = container.querySelector('.toast-loading');
-  if (loading) {
-    loading.classList.add('toast-out');
-    setTimeout(() => loading.remove(), 250);
-  }
-}
-
 // ===== 工具 =====
 function generateId() {
   return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
@@ -205,76 +182,6 @@ function initScrollReveal() {
     { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
   );
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-}
-
-// ===== 从 data.json 初始数据（仅首次访问时） =====
-async function seedFromDataJson() {
-  if (localStorage.getItem('portfolio-data')) return;
-  try {
-    const res = await fetch('data.json');
-    if (!res.ok) return;
-    const data = await res.json();
-    saveData(data);
-  } catch (e) {
-    // data.json 不存在时静默忽略
-  }
-}
-
-// ===== GitHub 自动同步 =====
-async function syncToGithub() {
-  const token = getGithubToken();
-  if (!token) return;
-
-  const data = getData();
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-
-  showToast('正在同步到 GitHub...', 'loading');
-
-  try {
-    // 1. 获取当前文件信息（含 SHA）
-    const getRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`,
-      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' } }
-    );
-
-    if (!getRes.ok && getRes.status !== 404) {
-      throw new Error(`获取文件信息失败 (${getRes.status})`);
-    }
-
-    const sha = getRes.ok ? (await getRes.json()).sha : undefined;
-
-    // 2. 提交更新
-    const putBody = {
-      message: 'chore: 自动同步作品数据',
-      content,
-      branch: GITHUB_BRANCH
-    };
-    if (sha) putBody.sha = sha;
-
-    const putRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(putBody)
-      }
-    );
-
-    if (!putRes.ok) {
-      const errData = await putRes.json().catch(() => ({}));
-      throw new Error(errData.message || `提交失败 (${putRes.status})`);
-    }
-
-    hideLoadingToast();
-    showToast('同步到 GitHub 成功 ✓', 'success');
-  } catch (err) {
-    hideLoadingToast();
-    showToast(`同步失败: ${err.message}`, 'error', 5000);
-  }
 }
 
 // ===== 页面初始化 =====
@@ -381,19 +288,9 @@ function enterAdminMode() {
   isAdminMode = true;
   const fab = document.getElementById('fabManage');
   const fabAdd = document.getElementById('fabAdd');
-  const fabSettings = document.getElementById('fabSettings');
   fab.classList.add('active');
   fab.innerHTML = '✕';
   fabAdd.classList.add('visible');
-  fabSettings.classList.add('visible');
-
-  // 首次进入时提示配置 Token
-  if (!getGithubToken()) {
-    setTimeout(() => {
-      showToast('提示: 点击 🔑 配置 GitHub 自动同步', 'loading', 5000);
-    }, 1000);
-  }
-
   renderProjects();
 }
 
@@ -402,11 +299,9 @@ function exitAdminMode() {
   sessionStorage.removeItem('portfolio-admin');
   const fab = document.getElementById('fabManage');
   const fabAdd = document.getElementById('fabAdd');
-  const fabSettings = document.getElementById('fabSettings');
   fab.classList.remove('active');
   fab.innerHTML = '⚙';
   fabAdd.classList.remove('visible');
-  fabSettings.classList.remove('visible');
   renderProjects();
 }
 
@@ -468,7 +363,6 @@ function saveProject() {
   currentCategory = cat;
   hideFormModal();
   renderProjects();
-  syncToGithub();
 }
 
 // ===== 删除 =====
@@ -491,7 +385,6 @@ function executeDelete() {
   deleteTargetId = null;
   document.getElementById('confirmModal').classList.remove('active');
   renderProjects();
-  syncToGithub();
 }
 
 function hideConfirmModal() {
@@ -507,8 +400,7 @@ window.editProject = function(id) {
 window.confirmDelete = confirmDelete;
 
 // ===== 事件绑定 =====
-document.addEventListener('DOMContentLoaded', async function() {
-  await seedFromDataJson();
+document.addEventListener('DOMContentLoaded', function() {
   loadCategory();
 
   // 管理模式
@@ -526,40 +418,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // 添加
   document.getElementById('fabAdd').addEventListener('click', () => showFormModal(null));
-
-  // GitHub 设置
-  document.getElementById('fabSettings').addEventListener('click', function() {
-    document.getElementById('inputGithubToken').value = getGithubToken();
-    document.getElementById('tokenStatus').style.display = 'none';
-    document.getElementById('githubSettingsModal').classList.add('active');
-    setTimeout(() => document.getElementById('inputGithubToken').focus(), 100);
-  });
-
-  document.getElementById('btnTokenSave').addEventListener('click', function() {
-    const token = document.getElementById('inputGithubToken').value.trim();
-    const statusEl = document.getElementById('tokenStatus');
-    if (!token) {
-      statusEl.textContent = '请输入 Token';
-      statusEl.style.color = '#dc3c3c';
-      statusEl.style.display = 'block';
-      return;
-    }
-    saveGithubToken(token);
-    statusEl.textContent = 'Token 已保存 ✓';
-    statusEl.style.color = '#059669';
-    statusEl.style.display = 'block';
-    setTimeout(() => {
-      document.getElementById('githubSettingsModal').classList.remove('active');
-    }, 1000);
-  });
-
-  document.getElementById('btnTokenCancel').addEventListener('click', function() {
-    document.getElementById('githubSettingsModal').classList.remove('active');
-  });
-
-  document.getElementById('githubSettingsModal').addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('active');
-  });
 
   // 表单
   document.getElementById('btnFormSave').addEventListener('click', saveProject);

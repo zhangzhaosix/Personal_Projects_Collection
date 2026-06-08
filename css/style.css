@@ -71,7 +71,7 @@ a {
 /* backdrop-filter 降级方案 */
 @supports not (backdrop-filter: blur(1px)) {
   .glass-card, .category-card, .project-card, .category-header,
-  .modal-box, .fab, .fab-add, .fab-settings {
+  .modal-box, .fab, .fab-add {
     background: rgba(255, 255, 255, 0.85) !important;
   }
 }
@@ -720,37 +720,6 @@ textarea.input-field {
   transform: scale(1.1);
 }
 
-/* 浮动设置按钮（管理模式下） */
-.fab-settings {
-  position: fixed;
-  bottom: 160px;
-  right: 32px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  color: #1a2a4a;
-  font-size: 18px;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 100;
-  box-shadow: 0 4px 20px rgba(26, 42, 74, 0.12);
-}
-
-.fab-settings.visible {
-  display: flex;
-}
-
-.fab-settings:hover {
-  background: rgba(255, 255, 255, 0.85);
-  transform: scale(1.1);
-}
 
 /* Toast 通知 */
 .toast-container {
@@ -987,14 +956,6 @@ textarea.input-field {
     height: 42px;
     font-size: 18px;
     bottom: 78px;
-    right: 20px;
-  }
-
-  .fab-settings {
-    width: 42px;
-    height: 42px;
-    font-size: 16px;
-    bottom: 130px;
     right: 20px;
   }
 
