@@ -8,13 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 技能分工
 
-### 网页开发 → superpowers 系列 skill
+### 网页开发 → superpowers 系列 skills
 
 承担 **产品经理 + 测试开发 + 调试** 职责：
 
 - 先调用 `superpowers:brainstorming` 确认需求和设计方案
 - 开发过程遵循 `superpowers:test-driven-development` 或 `superpowers:executing-plans` / `superpowers:writing-plans`
-- 完成后调用 `superpowers:requesting-code-review` 做代码审查
+- 完成后调用 `superpowers:requesting-code-reviewing` 或 `superpowers:requesting-code-review` 做代码审查
 - 修复问题使用 `superpowers:systematic-debugging`
 
 ### 网页美化 → ui-ux-pro-max skill
@@ -24,6 +24,71 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 布局、配色、字体、动效等视觉相关全部交由 `ui-ux-pro-max` 处理
 - 涉及风格选择（毛玻璃、极简、Bento Grid 等）时优先调用此 skill
 - 支持 responsive 适配、暗色模式、无障碍等前端设计决策
+
+### UI 设计监督 → impeccable skill
+
+承担 **UI 设计监督 + AI 味检查 + 设计质量把关** 职责：
+
+- 在页面美化、组件设计、视觉改版后调用 `impeccable` 做监督检查
+- 重点避免 AI 常见设计错误：过度渐变、过度阴影、布局拥挤、缺乏视觉层级、元素不对齐、无意义装饰
+- 防止明显“AI 味”，确保页面看起来像真实产品而不是模板堆叠
+
+## 执行原则
+
+### 四个原则
+
+1. **编码前先思考**：不要假设，不要隐藏困惑，呈现权衡。
+2. **简洁优先**：用最少的代码解决问题，不要过度推测。
+3. **精准修改**：只碰必须碰的，只清理自己造成的混乱。
+4. **目标驱动执行**：定义成功标准，循环验证直到达成。
+
+### 原则详解
+
+#### 1. 编码前思考
+
+不要假设。不要隐藏困惑。呈现权衡。
+
+- 明确说明假设：如果不确定，询问而不是猜测
+- 呈现多种解释：当存在歧义时，不要默默选择
+- 适时提出异议：如果存在更简单的方法，说出来
+- 困惑时停下来：指出不清楚的地方并要求澄清
+
+#### 2. 简洁优先
+
+用最少的代码解决问题。不要过度推测。
+
+- 不要添加要求之外的功能
+- 不要为一次性代码创建抽象
+- 不要添加未要求的“灵活性”或“可配置性”
+- 不要为不可能发生的场景做错误处理
+- 如果 200 行代码可以写成 50 行，重写它
+
+检验标准：资深工程师会觉得这过于复杂吗？如果是，简化。
+
+#### 3. 精准修改
+
+只碰必须碰的。只清理自己造成的混乱。
+
+- 不要“改进”相邻的代码、注释或格式
+- 不要重构没坏的东西
+- 匹配现有风格，即使你更倾向于不同的写法
+- 如果注意到无关的死代码，提一下，不要删除它
+- 删除因你的改动而变得无用的导入、变量、函数
+- 不要删除预先存在的死代码，除非被要求
+
+检验标准：每一行修改都应该能直接追溯到用户的请求。
+
+#### 4. 目标驱动执行
+
+定义成功标准。循环验证直到达成。
+
+对于多步骤任务，说明一个简短的计划：
+
+1. [步骤] → 验证：[检查]
+2. [步骤] → 验证：[检查]
+3. [步骤] → 验证：[检查]
+
+强有力的成功标准让 LLM 能够独立循环执行。弱标准（“让它工作”）需要不断澄清。
 
 ## 设计风格：毛玻璃（Glassmorphism）
 
@@ -63,19 +128,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## GitHub 同步流程
 
 - **仓库可见性**：私人（Private）仓库，仅自己可访问代码
-- **仓库名**：`Personal_Projects_Collection`
+- **仓库名**：首次上传前需要用户提供仓库名称；创建仓库后，再进行上传。已有仓库时使用用户确认过的仓库名
 - **部署方式**：GitHub Pages（推送即自动部署）
-- **访问地址**：`https://zhangzhaosix.github.io/Personal_Projects_Collection/`
+- **访问地址**：按实际仓库名生成，例如 `https://zhangzhaosix.github.io/<仓库名>/`
 
-**用户确认满意后**（用户说"可以了"/"没问题"/"满意"等确认信号），执行：
+**用户确认满意后**（用户说“可以了”/“没问题”/“满意”等确认信号），执行：
+
+1. 检查项目中是否有 `rename` 文件用于说明项目：
+   - 如果没有，就创建一个
+   - 如果已有，并且项目进行了改动，就对应修改 `rename` 文件内容
+2. 提交代码：
 
 ```bash
-# 提交代码
 git add .
 git commit -m "修改内容描述"
+```
 
-# 推送到 GitHub（GitHub Pages 会自动重新部署）
+3. 推送到 GitHub（GitHub Pages 会自动重新部署）：
+
+```bash
 git push || git push || git push
 ```
 
-> **推送规则**：远程地址已固定为 GitHub，无需再切换。如果推送失败，就一直重试直到成功为止。
+> **推送规则**：远程地址已固定为 GitHub 时，无需再切换。如果是第一次上传，必须先向用户确认仓库名称，创建仓库后再上传。

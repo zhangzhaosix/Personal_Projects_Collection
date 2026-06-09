@@ -1,0 +1,8 @@
+项目：个人作品集（Portfolio）
+类型：个人展示页面
+技术栈：纯 HTML + CSS + JavaScript（毛玻璃 Glassmorphism 风格）
+功能：
+- 分类展示个人项目作品
+- 管理模式（密码验证）：项目 CRUD、拖拽排序
+- 本地数据持久化（localStorage）
+- 响应式适配桌面/移动端

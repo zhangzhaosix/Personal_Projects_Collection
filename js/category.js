@@ -11,6 +11,7 @@ let currentCategory = null;
 let isAdminMode = false;
 let editingProjectId = null;
 let deleteTargetId = null;
+let dragSourceId = null; // 拖拽源项目 ID
 
 // ===== 数据管理 =====
 const DATA_VERSION = 'v2'; // 数据版本号，修改默认数据时递增以覆盖旧缓存
@@ -235,7 +236,8 @@ function renderProjects() {
     const color = accentColors[idx % accentColors.length];
     const delay = Math.min(idx + 1, 6);
     return `
-      <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}">
+      <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}"
+           ${isAdminMode ? `draggable="true" data-project-id="${proj.id}"` : ''}>
         <div class="card-accent" style="background:linear-gradient(90deg, ${color}, ${color}66);"></div>
         <div class="card-body">
           <div class="card-index" style="border:1.5px solid ${color}33;color:${color};">${String(idx + 1).padStart(2, '0')}</div>
@@ -244,11 +246,11 @@ function renderProjects() {
         </div>
         ${proj.url ? `
         <div class="card-footer">
-          <a href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" class="project-link-btn">🔗 访问</a>
+          <a href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false">🔗 访问</a>
         </div>` : ''}
         <div class="project-actions">
-          <button class="btn btn-outline btn-sm" onclick="editProject('${proj.id}')">✏ 编辑</button>
-          <button class="btn btn-danger btn-sm" onclick="confirmDelete('${proj.id}')">🗑 删除</button>
+          <button class="btn btn-outline btn-sm" draggable="false" onclick="editProject('${proj.id}')">✏ 编辑</button>
+          <button class="btn btn-danger btn-sm" draggable="false" onclick="confirmDelete('${proj.id}')">🗑 删除</button>
         </div>
       </div>
     `;
@@ -392,6 +394,75 @@ function hideConfirmModal() {
   deleteTargetId = null;
 }
 
+// ===== 拖拽排序（仅管理模式） =====
+function initDragSort() {
+  const grid = document.getElementById('projectGrid');
+
+  grid.addEventListener('dragstart', function(e) {
+    const card = e.target.closest('.project-card');
+    if (!card || !isAdminMode) return;
+    dragSourceId = card.dataset.projectId;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragSourceId);
+  });
+
+  grid.addEventListener('dragend', function(e) {
+    const card = e.target.closest('.project-card');
+    if (card) card.classList.remove('dragging');
+    grid.querySelectorAll('.project-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+    dragSourceId = null;
+  });
+
+  grid.addEventListener('dragover', function(e) {
+    if (!isAdminMode || !dragSourceId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+
+  grid.addEventListener('dragenter', function(e) {
+    if (!isAdminMode || !dragSourceId) return;
+    const card = e.target.closest('.project-card');
+    if (card && card.dataset.projectId !== dragSourceId) {
+      card.classList.add('drag-over');
+    }
+  });
+
+  grid.addEventListener('dragleave', function(e) {
+    const card = e.target.closest('.project-card');
+    if (card) {
+      card.classList.remove('drag-over');
+    }
+  });
+
+  grid.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (!isAdminMode || !dragSourceId) return;
+
+    const targetCard = e.target.closest('.project-card');
+    if (!targetCard) return;
+
+    const targetId = targetCard.dataset.projectId;
+    if (!targetId || targetId === dragSourceId) return;
+
+    const data = getData();
+    const cat = data.categories.find(c => c.id === currentCategory.id);
+    if (!cat) return;
+
+    const fromIdx = cat.projects.findIndex(p => p.id === dragSourceId);
+    const toIdx = cat.projects.findIndex(p => p.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    // 移动项目到新位置
+    const [moved] = cat.projects.splice(fromIdx, 1);
+    cat.projects.splice(toIdx, 0, moved);
+
+    saveData(data);
+    currentCategory = cat;
+    renderProjects();
+  });
+}
+
 // ===== 全局暴露 =====
 window.editProject = function(id) {
   const p = currentCategory.projects.find(p => p.id === id);
@@ -402,6 +473,7 @@ window.confirmDelete = confirmDelete;
 // ===== 事件绑定 =====
 document.addEventListener('DOMContentLoaded', function() {
   loadCategory();
+  initDragSort();
 
   // 管理模式
   document.getElementById('fabManage').addEventListener('click', toggleAdminMode);
