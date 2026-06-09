@@ -297,10 +297,82 @@ function initVisitorCounter() {
   }
 }
 
+// --- 精选作品展示（首页取各分类的代表项目） ---
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeUrl(str) {
+  if (!str) return '#';
+  if (str.startsWith('http://') || str.startsWith('https://')) return str;
+  return 'https://' + str;
+}
+
+function renderFeaturedProjects() {
+  const el = document.getElementById('featuredSection');
+  if (!el) return;
+
+  const data = getData();
+  const maxFeatured = 4;
+  const featured = [];
+
+  // 从每个分类取最多 2 个项目，凑满 maxFeatured
+  for (const cat of data.categories) {
+    for (const proj of cat.projects) {
+      if (featured.length >= maxFeatured) break;
+      featured.push({ ...proj, categoryName: cat.name, categoryId: cat.id });
+    }
+    if (featured.length >= maxFeatured) break;
+  }
+
+  if (featured.length === 0) {
+    el.style.display = 'none';
+    return;
+  }
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="featured-inner">
+      <h3 class="featured-heading">精选作品</h3>
+      <div class="featured-grid">
+        ${featured.map((proj, idx) => `
+          <a class="featured-card" href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" style="animation-delay:${idx * 0.1}s;">
+            <div class="featured-category">${escapeHtml(proj.categoryName)}</div>
+            <div class="featured-name">${escapeHtml(proj.name)}</div>
+            <div class="featured-desc">${escapeHtml(proj.description || '暂无简介')}</div>
+          </a>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  requestAnimationFrame(() => initScrollReveal());
+}
+
+// --- 联系方式 ---
+function renderContact() {
+  const el = document.getElementById('contactSection');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="contact-inner">
+      <a href="mailto:1801327763@qq.com" class="contact-link" title="发送邮件">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <span>1801327763@qq.com</span>
+      </a>
+    </div>
+  `;
+}
+
 // --- DOM 就绪 ---
 document.addEventListener('DOMContentLoaded', async function() {
   await seedFromDataJson();
   renderCategories();
+  renderFeaturedProjects();
+  renderContact();
   initScrollReveal();
   initTypewriter();
   initVisitorCounter();

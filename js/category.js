@@ -202,7 +202,7 @@ function loadCategory() {
     return;
   }
 
-  document.getElementById('categoryTitle').textContent = currentCategory.name;
+  document.getElementById('categoryTitle').textContent = currentCategory.name + ' · 共 ' + currentCategory.projects.length + ' 个项目';
 
   // 检查是否已有管理员会话
   if (sessionStorage.getItem('portfolio-admin') === 'true') {
@@ -212,15 +212,18 @@ function loadCategory() {
   renderProjects();
 }
 
-// ===== 渲染作品卡片（带装饰元素 + 动画） =====
+// ===== 渲染作品卡片 =====
 function renderProjects() {
   const grid = document.getElementById('projectGrid');
   const projects = currentCategory.projects;
 
-  const accentColors = [
-    '#2563eb', '#6366f1', '#059669', '#d97706', '#dc2626',
-    '#0d9488', '#0284c7', '#7c3aed', '#ea580c', '#1e293b'
-  ];
+  // 每张卡片去掉彩虹色，改为分类统一的强调色
+  const categoryColors = {
+    'data-analysis': '#2563eb',
+    'agent':         '#6366f1',
+    'ai-learning':   '#059669'
+  };
+  const accent = categoryColors[currentCategory.id] || '#2563eb';
 
   if (!projects || projects.length === 0) {
     grid.innerHTML = `
@@ -233,21 +236,24 @@ function renderProjects() {
   }
 
   grid.innerHTML = projects.map((proj, idx) => {
-    const color = accentColors[idx % accentColors.length];
     const delay = Math.min(idx + 1, 6);
     return `
       <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}"
-           ${isAdminMode ? `draggable="true" data-project-id="${proj.id}"` : ''}>
-        <div class="card-accent" style="background:linear-gradient(90deg, ${color}, ${color}66);"></div>
+           ${isAdminMode ? `draggable="true" data-project-id="${proj.id}"` : ''}
+           ${(!isAdminMode && proj.url) ? `onclick="window.open('${escapeUrl(proj.url)}','_blank')"` : ''}
+           ${(!isAdminMode && proj.url) ? 'style="cursor:pointer;"' : ''}>
+        <div class="card-accent" style="background:${accent};"></div>
         <div class="card-body">
-          <div class="card-index" style="border:1.5px solid ${color}33;color:${color};">${String(idx + 1).padStart(2, '0')}</div>
           <div class="project-name">${escapeHtml(proj.name)}</div>
           <div class="project-desc">${escapeHtml(proj.description || '暂无简介')}</div>
         </div>
-        ${proj.url ? `
         <div class="card-footer">
-          <a href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false">🔗 访问</a>
-        </div>` : ''}
+          ${proj.url ? `
+          <a href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            访问
+          </a>` : ''}
+        </div>
         <div class="project-actions">
           <button class="btn btn-outline btn-sm" draggable="false" onclick="editProject('${proj.id}')">✏ 编辑</button>
           <button class="btn btn-danger btn-sm" draggable="false" onclick="confirmDelete('${proj.id}')">🗑 删除</button>
@@ -503,6 +509,15 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnConfirmCancel').addEventListener('click', hideConfirmModal);
   document.getElementById('confirmModal').addEventListener('click', function(e) {
     if (e.target === this) hideConfirmModal();
+  });
+
+  // 返回顶部
+  const backBtn = document.getElementById('backToTop');
+  backBtn.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  window.addEventListener('scroll', function() {
+    backBtn.classList.toggle('visible', window.scrollY > 300);
   });
 
   // Enter 键跳转
