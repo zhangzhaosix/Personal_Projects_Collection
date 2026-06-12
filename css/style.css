@@ -237,9 +237,36 @@ a {
   background: rgba(255, 255, 255, 0.8);
 }
 
+select.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+}
+
 textarea.input-field {
   resize: vertical;
   min-height: 80px;
+}
+
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(26, 42, 74, 0.68);
+  margin-bottom: -8px;
+}
+
+.field-helper {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(26, 42, 74, 0.45);
+  margin-top: -8px;
+}
+
+.field-error {
+  font-size: 13px;
+  color: #dc3c3c;
+  line-height: 1.5;
 }
 
 /* ============================================
@@ -578,6 +605,72 @@ textarea.input-field {
   white-space: pre-wrap;
 }
 
+.project-meta {
+  width: 100%;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-status {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border: 1px solid transparent;
+}
+
+.project-status.completed {
+  color: #0f766e;
+  background: rgba(13, 148, 136, 0.12);
+  border-color: rgba(13, 148, 136, 0.18);
+}
+
+.project-status.progressing {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.project-status.iterating {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.12);
+  border-color: rgba(124, 58, 237, 0.18);
+}
+
+.project-status.pending {
+  color: #9a3412;
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.18);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(26, 42, 74, 0.06);
+  border: 1px solid rgba(26, 42, 74, 0.08);
+  color: rgba(26, 42, 74, 0.68);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tag-pill.tag-empty {
+  color: rgba(26, 42, 74, 0.38);
+}
+
 /* 卡片底部（链接按钮区域） */
 .card-footer {
   padding: 12px 20px 16px;
@@ -647,6 +740,19 @@ textarea.input-field {
 
 .empty-state p {
   font-size: 15px;
+}
+
+.home-error {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.home-retry {
+  min-width: 120px;
 }
 
 /* 浮动管理按钮 */
