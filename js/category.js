@@ -1,51 +1,72 @@
 /* ============================================
-   category.js — 分类作品页 CRUD 交互
+   category.js - 分类页作品管理
    Firebase Auth + Firestore 单文档数据源
    ============================================ */
 
 let portfolioData = null;
 let currentCategory = null;
+let currentAuthUser = null;
 let isAdminMode = false;
 let editingProjectId = null;
 let deleteTargetId = null;
-let currentAuthUser = null;
+let dragSourceId = null;
 
 const statusClassMap = {
-  '已完成': 'completed',
-  '进行中': 'progressing',
-  '迭代中': 'iterating',
-  '待补充': 'pending'
+  已完成: 'completed',
+  进行中: 'progressing',
+  迭代中: 'iterating',
+  待补充: 'pending'
+};
+
+const categoryAccentMap = {
+  'data-analysis': '#2563eb',
+  agent: '#6366f1',
+  'ai-learning': '#059669'
 };
 
 function getCategoryIdFromUrl() {
   return new URLSearchParams(window.location.search).get('id') || '';
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
+function escapeHtml(value) {
   const div = document.createElement('div');
-  div.textContent = str;
+  div.textContent = value || '';
   return div.innerHTML;
 }
 
-function escapeUrl(str) {
-  if (!str) return '#';
-  if (str.startsWith('http://') || str.startsWith('https://')) return str;
-  return 'https://' + str;
+function escapeUrl(value) {
+  if (!value) return '#';
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  return `https://${value}`;
 }
 
 function generateId() {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  return `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
 }
 
+function showToast(message, type = 'success', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-out');
+    setTimeout(() => toast.remove(), 250);
+  }, duration);
+}
+
 function initScrollReveal() {
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
           observer.unobserve(entry.target);
@@ -55,7 +76,21 @@ function initScrollReveal() {
     { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
   );
 
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+}
+
+function initBackToTop() {
+  const button = document.getElementById('backToTop');
+  if (!button || button.dataset.bound === 'true') return;
+
+  button.dataset.bound = 'true';
+  button.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  window.addEventListener('scroll', () => {
+    button.classList.toggle('visible', window.scrollY > 300);
+  });
 }
 
 function setManageButtonState() {
@@ -67,11 +102,12 @@ function setManageButtonState() {
     fab.classList.add('active');
     fab.innerHTML = '✕';
     fabAdd.classList.add('visible');
-  } else {
-    fab.classList.remove('active');
-    fab.innerHTML = '⚙';
-    fabAdd.classList.remove('visible');
+    return;
   }
+
+  fab.classList.remove('active');
+  fab.innerHTML = '⚙';
+  fabAdd.classList.remove('visible');
 }
 
 function setLoginError(message) {
@@ -112,12 +148,10 @@ function renderCategoryError(message) {
 
 function renderProjects() {
   const grid = document.getElementById('projectGrid');
-  const projects = currentCategory && Array.isArray(currentCategory.projects) ? currentCategory.projects : [];
+  if (!grid) return;
 
-  const accentColors = [
-    '#2563eb', '#6366f1', '#059669', '#d97706', '#dc2626',
-    '#0d9488', '#0284c7', '#7c3aed', '#ea580c', '#1e293b'
-  ];
+  const projects = currentCategory && Array.isArray(currentCategory.projects) ? currentCategory.projects : [];
+  const accent = categoryAccentMap[currentCategory?.id] || '#2563eb';
 
   if (!projects.length) {
     grid.innerHTML = `
@@ -129,57 +163,62 @@ function renderProjects() {
     return;
   }
 
-  grid.innerHTML = projects.map((proj, idx) => {
-    const color = accentColors[idx % accentColors.length];
-    const delay = Math.min(idx + 1, 6);
-    const tags = Array.isArray(proj.tags) ? proj.tags : [];
-    const status = proj.status || '待补充';
+  grid.innerHTML = projects
+    .map((project, idx) => {
+      const delay = Math.min(idx + 1, 6);
+      const status = project.status || '待补充';
+      const tags = Array.isArray(project.tags) ? project.tags : [];
+      const dragAttrs = isAdminMode ? `draggable="true" data-project-id="${project.id}"` : '';
+      const clickAttrs = !isAdminMode && project.url
+        ? `onclick="window.open('${escapeUrl(project.url)}','_blank')" style="cursor:pointer;"`
+        : '';
 
-    return `
-      <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}">
-        <div class="card-accent" style="background:linear-gradient(90deg, ${color}, ${color}66);"></div>
-        <div class="card-body">
-          <div class="card-index" style="border:1.5px solid ${color}33;color:${color};">${String(idx + 1).padStart(2, '0')}</div>
-          <div class="project-name">${escapeHtml(proj.name)}</div>
-          <div class="project-desc">${escapeHtml(proj.description || '暂无简介')}</div>
-          <div class="project-meta">
-            <span class="project-status ${statusClassMap[status] || 'pending'}">${escapeHtml(status)}</span>
-            <div class="tag-list">
-              ${tags.length ? tags.map(tag => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('') : '<span class="tag-pill tag-empty">暂无标签</span>'}
+      return `
+        <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}" ${dragAttrs} ${clickAttrs}>
+          <div class="card-accent" style="background:linear-gradient(90deg, ${accent}, ${accent}66);"></div>
+          <div class="card-body">
+            <div class="card-index" style="border:1.5px solid ${accent}33;color:${accent};">${String(idx + 1).padStart(2, '0')}</div>
+            <div class="project-name">${escapeHtml(project.name)}</div>
+            <div class="project-desc">${escapeHtml(project.description || '暂无简介')}</div>
+            <div class="project-meta">
+              <span class="project-status ${statusClassMap[status] || 'pending'}">${escapeHtml(status)}</span>
+              <div class="tag-list">
+                ${tags.length
+                  ? tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')
+                  : '<span class="tag-pill tag-empty">暂无标签</span>'}
+              </div>
             </div>
           </div>
+          ${project.url ? `
+            <div class="card-footer">
+              <a href="${escapeUrl(project.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">访问</a>
+            </div>
+          ` : ''}
+          ${isAdminMode ? `
+            <div class="project-actions">
+              <button class="btn btn-outline btn-sm" draggable="false" onclick="editProject('${project.id}')">✏ 编辑</button>
+              <button class="btn btn-danger btn-sm" draggable="false" onclick="confirmDelete('${project.id}')">🗑 删除</button>
+            </div>
+          ` : ''}
         </div>
-        ${proj.url ? `
-        <div class="card-footer">
-          <a href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" class="project-link-btn">🔗 访问</a>
-        </div>` : ''}
-        ${isAdminMode ? `
-        <div class="project-actions">
-          <button class="btn btn-outline btn-sm" onclick="editProject('${proj.id}')">✏ 编辑</button>
-          <button class="btn btn-danger btn-sm" onclick="confirmDelete('${proj.id}')">🗑 删除</button>
-        </div>` : ''}
-      </div>
-    `;
-  }).join('');
+      `;
+    })
+    .join('');
 
   requestAnimationFrame(() => initScrollReveal());
 }
 
 async function loadCategory() {
-  const catId = getCategoryIdFromUrl();
+  const categoryId = getCategoryIdFromUrl();
   const dataResult = await PortfolioFirebase.loadPortfolioData();
 
   if (!dataResult.ok) {
-    if (dataResult.empty) {
-      renderCategoryError(dataResult.error);
-    } else {
-      renderCategoryError(dataResult.error || 'Firestore 数据加载失败');
-    }
+    renderCategoryError(dataResult.error || 'Firestore 数据加载失败');
     return;
   }
 
   portfolioData = dataResult.data;
-  currentCategory = portfolioData.categories.find(c => c.id === catId) || null;
+  currentCategory = portfolioData.categories.find((category) => category.id === categoryId) || null;
 
   if (!currentCategory) {
     document.getElementById('categoryTitle').textContent = '分类未找到';
@@ -192,7 +231,7 @@ async function loadCategory() {
     return;
   }
 
-  document.getElementById('categoryTitle').textContent = currentCategory.name;
+  document.getElementById('categoryTitle').textContent = `${currentCategory.name} · 共 ${currentCategory.projects.length} 个项目`;
   renderProjects();
 }
 
@@ -207,11 +246,13 @@ async function bootstrapCategory() {
 
   PortfolioFirebase.onAuthChange(async (user) => {
     currentAuthUser = user;
+
     if (PortfolioFirebase.isAdminUser(user)) {
       const seedResult = await PortfolioFirebase.ensureAdminSeed();
       if (seedResult.ok && seedResult.seeded) {
         await loadCategory();
       }
+
       if (!isAdminMode) {
         enterAdminMode();
       } else {
@@ -223,6 +264,7 @@ async function bootstrapCategory() {
 
     if (isAdminMode) {
       exitAdminMode();
+      showToast('已退出管理模式', 'success');
     } else {
       setManageButtonState();
       renderProjects();
@@ -294,14 +336,16 @@ async function verifyLogin() {
   }
 
   enterAdminMode();
+  showToast('管理员登录成功', 'success');
 }
 
 function readTagsInput() {
   const raw = document.getElementById('inputTags').value.trim();
   if (!raw) return [];
+
   return raw
-    .split(/[,，、\n]+/)
-    .map(tag => tag.trim())
+    .split(/[,，\n]+/)
+    .map((tag) => tag.trim())
     .filter(Boolean);
 }
 
@@ -343,17 +387,17 @@ async function saveProject() {
   }
 
   const previousData = cloneData(portfolioData);
-  const category = portfolioData.categories.find(c => c.id === currentCategory.id);
+  const category = portfolioData.categories.find((item) => item.id === currentCategory.id);
   if (!category) {
     setFormError('当前分类不存在，请刷新后重试。');
     return;
   }
 
   if (editingProjectId) {
-    const idx = category.projects.findIndex(p => p.id === editingProjectId);
-    if (idx !== -1) {
-      category.projects[idx] = {
-        ...category.projects[idx],
+    const targetIndex = category.projects.findIndex((project) => project.id === editingProjectId);
+    if (targetIndex !== -1) {
+      category.projects[targetIndex] = {
+        ...category.projects[targetIndex],
         name,
         url,
         description,
@@ -376,58 +420,55 @@ async function saveProject() {
   const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
   if (!saveResult.ok) {
     portfolioData = previousData;
-    currentCategory = portfolioData.categories.find(c => c.id === currentCategory.id) || currentCategory;
+    currentCategory = portfolioData.categories.find((item) => item.id === currentCategory.id) || currentCategory;
     setFormError(saveResult.error || '保存失败，请重试。');
     renderProjects();
+    showToast('保存失败', 'error');
     return;
   }
 
   hideFormModal();
   await loadCategory();
-  if (isAdminMode) {
-    enterAdminMode();
-  }
+  if (isAdminMode) renderProjects();
+  showToast(editingProjectId ? '作品已更新' : '作品已添加', 'success');
 }
 
 function confirmDelete(projectId) {
   if (!isSignedInAdmin()) return;
 
-  const project = currentCategory.projects.find(p => p.id === projectId);
+  const project = currentCategory.projects.find((item) => item.id === projectId);
   if (!project) return;
+
   deleteTargetId = projectId;
   document.getElementById('confirmProjectName').textContent = `「${project.name}」`;
   document.getElementById('confirmModal').classList.add('active');
 }
 
 async function executeDelete() {
-  if (!deleteTargetId) return;
-  if (!isSignedInAdmin()) {
-    return;
-  }
+  if (!deleteTargetId || !isSignedInAdmin()) return;
 
   const previousData = cloneData(portfolioData);
-  const category = portfolioData.categories.find(c => c.id === currentCategory.id);
+  const category = portfolioData.categories.find((item) => item.id === currentCategory.id);
   if (!category) return;
 
-  category.projects = category.projects.filter(p => p.id !== deleteTargetId);
+  category.projects = category.projects.filter((project) => project.id !== deleteTargetId);
+
   const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
   if (!saveResult.ok) {
     portfolioData = previousData;
-    currentCategory = portfolioData.categories.find(c => c.id === currentCategory.id) || currentCategory;
+    currentCategory = portfolioData.categories.find((item) => item.id === currentCategory.id) || currentCategory;
     document.getElementById('confirmModal').classList.remove('active');
     deleteTargetId = null;
     renderProjects();
-    alert(saveResult.error || '删除失败，请重试。');
+    showToast(saveResult.error || '删除失败，请重试。', 'error');
     return;
   }
 
-  currentCategory = category;
   deleteTargetId = null;
   document.getElementById('confirmModal').classList.remove('active');
   await loadCategory();
-  if (isAdminMode) {
-    enterAdminMode();
-  }
+  if (isAdminMode) renderProjects();
+  showToast('作品已删除', 'success');
 }
 
 function hideConfirmModal() {
@@ -435,17 +476,100 @@ function hideConfirmModal() {
   deleteTargetId = null;
 }
 
-window.editProject = function (id) {
+function bindDragSorting() {
+  const grid = document.getElementById('projectGrid');
+  if (!grid || grid.dataset.dragBound === 'true') return;
+
+  grid.dataset.dragBound = 'true';
+
+  grid.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('.project-card');
+    if (!card || !isAdminMode) return;
+
+    dragSourceId = card.dataset.projectId;
+    card.classList.add('dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', dragSourceId);
+  });
+
+  grid.addEventListener('dragend', (event) => {
+    const card = event.target.closest('.project-card');
+    if (card) card.classList.remove('dragging');
+    grid.querySelectorAll('.project-card.drag-over').forEach((el) => el.classList.remove('drag-over'));
+    dragSourceId = null;
+  });
+
+  grid.addEventListener('dragover', (event) => {
+    if (!isAdminMode || !dragSourceId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  });
+
+  grid.addEventListener('dragenter', (event) => {
+    if (!isAdminMode || !dragSourceId) return;
+    const card = event.target.closest('.project-card');
+    if (card && card.dataset.projectId !== dragSourceId) {
+      card.classList.add('drag-over');
+    }
+  });
+
+  grid.addEventListener('dragleave', (event) => {
+    const card = event.target.closest('.project-card');
+    if (card) {
+      card.classList.remove('drag-over');
+    }
+  });
+
+  grid.addEventListener('drop', async (event) => {
+    event.preventDefault();
+    if (!isAdminMode || !dragSourceId) return;
+
+    const targetCard = event.target.closest('.project-card');
+    if (!targetCard) return;
+
+    const targetId = targetCard.dataset.projectId;
+    if (!targetId || targetId === dragSourceId) return;
+
+    const previousData = cloneData(portfolioData);
+    const category = portfolioData.categories.find((item) => item.id === currentCategory.id);
+    if (!category) return;
+
+    const fromIndex = category.projects.findIndex((project) => project.id === dragSourceId);
+    const toIndex = category.projects.findIndex((project) => project.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const [movedProject] = category.projects.splice(fromIndex, 1);
+    category.projects.splice(toIndex, 0, movedProject);
+    currentCategory = category;
+    renderProjects();
+
+    const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
+    if (!saveResult.ok) {
+      portfolioData = previousData;
+      currentCategory = portfolioData.categories.find((item) => item.id === currentCategory.id) || currentCategory;
+      renderProjects();
+      showToast(saveResult.error || '排序保存失败', 'error');
+      return;
+    }
+
+    showToast('排序已更新', 'success');
+  });
+}
+
+window.editProject = function editProject(projectId) {
   if (!isSignedInAdmin()) return;
-  const p = currentCategory.projects.find(p => p.id === id);
-  if (p) showFormModal(p);
+  const project = currentCategory.projects.find((item) => item.id === projectId);
+  if (project) showFormModal(project);
 };
 
 window.confirmDelete = confirmDelete;
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   const title = document.getElementById('categoryTitle');
   if (title) title.textContent = '加载中...';
+
+  initBackToTop();
+  bindDragSorting();
 
   bootstrapCategory().catch((error) => {
     renderCategoryError(`页面初始化失败：${error && error.message ? error.message : '未知错误'}`);
@@ -455,11 +579,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('btnPwdConfirm').addEventListener('click', verifyLogin);
   document.getElementById('btnPwdCancel').addEventListener('click', hideLoginModal);
-  document.getElementById('inputLoginPassword').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') verifyLogin();
+  document.getElementById('inputLoginPassword').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') verifyLogin();
   });
-  document.getElementById('passwordModal').addEventListener('click', function (e) {
-    if (e.target === this) hideLoginModal();
+  document.getElementById('passwordModal').addEventListener('click', function onOverlayClick(event) {
+    if (event.target === this) hideLoginModal();
   });
 
   document.getElementById('fabAdd').addEventListener('click', () => {
@@ -472,52 +596,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('btnFormSave').addEventListener('click', saveProject);
   document.getElementById('btnFormCancel').addEventListener('click', hideFormModal);
-  document.getElementById('formModal').addEventListener('click', function (e) {
-    if (e.target === this) hideFormModal();
+  document.getElementById('formModal').addEventListener('click', function onOverlayClick(event) {
+    if (event.target === this) hideFormModal();
   });
 
   document.getElementById('btnConfirmDelete').addEventListener('click', executeDelete);
   document.getElementById('btnConfirmCancel').addEventListener('click', hideConfirmModal);
-  document.getElementById('confirmModal').addEventListener('click', function (e) {
-    if (e.target === this) hideConfirmModal();
+  document.getElementById('confirmModal').addEventListener('click', function onOverlayClick(event) {
+    if (event.target === this) hideConfirmModal();
   });
 
-  document.getElementById('inputName').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+  document.getElementById('inputName').addEventListener('keydown', function onNameKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       document.getElementById('inputUrl').focus();
     }
   });
-  document.getElementById('inputUrl').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+
+  document.getElementById('inputUrl').addEventListener('keydown', function onUrlKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       document.getElementById('inputDesc').focus();
     }
   });
-  document.getElementById('inputDesc').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      if (e.ctrlKey || e.shiftKey) {
-        e.preventDefault();
-        const start = this.selectionStart;
-        const end = this.selectionEnd;
-        this.value = this.value.slice(0, start) + '\n' + this.value.slice(end);
-        this.selectionStart = this.selectionEnd = start + 1;
-        return;
-      }
 
-      e.preventDefault();
-      document.getElementById('inputTags').focus();
+  document.getElementById('inputDesc').addEventListener('keydown', function onDescKeydown(event) {
+    if (event.key !== 'Enter') return;
+
+    if (event.ctrlKey || event.shiftKey) {
+      event.preventDefault();
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      this.value = `${this.value.slice(0, start)}\n${this.value.slice(end)}`;
+      this.selectionStart = this.selectionEnd = start + 1;
+      return;
     }
+
+    event.preventDefault();
+    document.getElementById('inputTags').focus();
   });
-  document.getElementById('inputTags').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+
+  document.getElementById('inputTags').addEventListener('keydown', function onTagsKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       document.getElementById('selectStatus').focus();
     }
   });
-  document.getElementById('selectStatus').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+
+  document.getElementById('selectStatus').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       saveProject();
     }
   });

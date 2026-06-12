@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div class="ambient-blob"></div>
   <div class="category-page">
     <!-- 顶部导航栏 -->
     <div class="category-header">
@@ -30,6 +31,11 @@
   <button class="fab-add" id="fabAdd" title="添加作品">+</button>
 
   <!-- 密码验证模态框 -->
+  <button class="back-to-top" id="backToTop" title="Back To Top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+  <div class="toast-container" id="toastContainer"></div>
+
   <div class="modal-overlay" id="passwordModal">
     <div class="modal-box" style="max-width:380px;">
       <div class="modal-title" style="text-align:center;">管理员登录</div>
