@@ -30,22 +30,22 @@
   <button class="fab" id="fabManage" title="管理模式">⚙</button>
   <button class="fab-add" id="fabAdd" title="添加作品">+</button>
 
-  <!-- 返回顶部 -->
-  <button class="back-to-top" id="backToTop" title="返回顶部">
+  <!-- 密码验证模态框 -->
+  <button class="back-to-top" id="backToTop" title="Back To Top">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
-
-  <!-- Toast 通知 -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- 密码验证模态框 -->
   <div class="modal-overlay" id="passwordModal">
     <div class="modal-box" style="max-width:380px;">
-      <div class="modal-title" style="text-align:center;">管理模式</div>
+      <div class="modal-title" style="text-align:center;">管理员登录</div>
       <div class="modal-body">
-        <p style="text-align:center;color:rgba(26,42,74,0.6);margin-bottom:4px;">请输入管理员密码</p>
-        <input type="password" class="input-field" id="inputPassword" placeholder="密码" style="text-align:center;font-size:18px;letter-spacing:4px;">
-        <p id="passwordError" style="text-align:center;color:#dc3c3c;font-size:13px;display:none;">密码错误，请重试</p>
+        <label class="field-label" for="inputLoginEmail">登录邮箱</label>
+        <input type="email" class="input-field" id="inputLoginEmail" value="1801327763@qq.com" readonly style="font-size:15px;">
+        <label class="field-label" for="inputLoginPassword">登录密码</label>
+        <input type="password" class="input-field" id="inputLoginPassword" placeholder="请输入密码" autocomplete="current-password" style="text-align:center;font-size:18px;letter-spacing:4px;">
+        <p class="field-helper">仅固定邮箱可登录，密码不会显示在前端。</p>
+        <p id="loginError" class="field-error" style="display:none;">登录失败，请检查邮箱 / 密码或 Firebase 配置。</p>
       </div>
       <div class="modal-footer" style="justify-content:center;">
         <button class="btn btn-outline" id="btnPwdCancel">取消</button>
@@ -59,9 +59,23 @@
     <div class="modal-box">
       <div class="modal-title" id="formModalTitle">添加作品</div>
       <div class="modal-body">
+        <label class="field-label" for="inputName">作品名称</label>
         <input type="text" class="input-field" id="inputName" placeholder="作品名称" maxlength="50">
+        <label class="field-label" for="inputUrl">作品网址</label>
         <input type="text" class="input-field" id="inputUrl" placeholder="作品网址（可选）" maxlength="500">
+        <label class="field-label" for="inputDesc">作品简介</label>
         <textarea class="input-field" id="inputDesc" placeholder="作品简介" maxlength="200" rows="3"></textarea>
+        <label class="field-label" for="inputTags">标签</label>
+        <input type="text" class="input-field" id="inputTags" placeholder="用逗号分隔，例如：数据分析, BI" maxlength="200">
+        <label class="field-label" for="selectStatus">状态</label>
+        <select class="input-field" id="selectStatus">
+          <option value="已完成">已完成</option>
+          <option value="进行中">进行中</option>
+          <option value="迭代中">迭代中</option>
+          <option value="待补充">待补充</option>
+        </select>
+        <p class="field-helper">标签会按逗号拆分后保存到 Firestore，状态为固定枚举值。</p>
+        <p id="formError" class="field-error" style="display:none;">保存失败，请重试。</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" id="btnFormCancel">取消</button>
@@ -82,8 +96,7 @@
     </div>
   </div>
 
-  </div>
-
+  <script src="js/firebase-portfolio.js"></script>
   <script src="js/category.js"></script>
 </body>
 </html>

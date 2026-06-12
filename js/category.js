@@ -1,179 +1,72 @@
 /* ============================================
-   category.js — 分类作品页 CRUD 交互
-   管理模式需密码验证，访客只读
+   category.js - 分类页作品管理
+   Firebase Auth + Firestore 单文档数据源
    ============================================ */
 
-// ===== 配置区 =====
-const ADMIN_PASSWORD = '741021';  // ← 管理员密码，可自行修改
-
-// ===== 状态 =====
+let portfolioData = null;
 let currentCategory = null;
+let currentAuthUser = null;
 let isAdminMode = false;
 let editingProjectId = null;
 let deleteTargetId = null;
-let dragSourceId = null; // 拖拽源项目 ID
+let dragSourceId = null;
 
-// ===== 数据管理 =====
-const DATA_VERSION = 'v2'; // 数据版本号，修改默认数据时递增以覆盖旧缓存
-const DEFAULT_DATA = {
-  _version: DATA_VERSION,
-  "categories": [
-    {
-      "id": "data-analysis",
-      "name": "数据分析项目",
-      "projects": [
-        {
-          "id": "p_1780814882051_z593",
-          "name": "【抖音 达人种草 数据分析 自动化报表】",
-          "url": "https://vcnnr111xqu6.feishu.cn/sheets/Tc2psCbP0hnjAOtWFrjc5wzNnTd?from=from_copylink",
-          "description": "原有的表格指标混乱、颗粒度不一致，无法直观呈现种草转化效果急需一份结果前置、逻辑清晰的复盘分析报表",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780841238422_ic9b",
-          "name": "【抖音电商 数据监控 BI看板】",
-          "url": "https://vcnnr111xqu6.feishu.cn/docx/NqNhdQzscoLOYIxxRDYcvrJRnkf?from=from_copylink",
-          "description": "多个维度（声量、转化、人群资产）呈现当前种草效果的BI看板",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780841697010_p9ip",
-          "name": "电商 达人种草 洞察分析 报告",
-          "url": "https://vcnnr111xqu6.feishu.cn/docx/LVhedyuJmoCzU4xZnFZcEDe9nnh",
-          "description": "当时骆驼户外品牌 在抖音开展达人种草投放，对标安德玛、凯乐石、伯希和 三大竞品，急需通过数据复盘解决 3 个核心问题：\n1：本次种草投放的真实效果如何，和竞品差距在哪？\n2：哪些达人、哪些内容赛道是高效的，哪些在浪费预算？\n3：如何用数据定位优化点，给业务端提供可落地的投放策略？",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780843960501_2nmq",
-          "name": "抖音 电商直播 用户行为 分析",
-          "url": "https://vcnnr111xqu6.feishu.cn/mindnotes/ZVrMbJCjxmKnMFnzIqKc5aENnLg",
-          "description": "基于用户体验对用户动作进行了详细的拆解，通过优化用户观看体验、提升互动率为核心抓手，驱动直播GMV增长",
-          "createdAt": "2026-06-07"
-        }
-      ]
-    },
-    {
-      "id": "agent",
-      "name": "Agent项目",
-      "projects": [
-        {
-          "id": "p_1780815946402_ep9l",
-          "name": "日常清单网页",
-          "url": "https://zhangzhaosix.github.io/task-list/",
-          "description": "记录每日必做、临时事件、长期规划、思维模式",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780815955322_a4sh",
-          "name": "音乐合集",
-          "url": "http://127.0.0.1:5000/",
-          "description": "记录我爱听的歌曲",
-          "createdAt": "2026-06-07"
-        }
-      ]
-    },
-    {
-      "id": "ai-learning",
-      "name": "AI学习合集",
-      "projects": [
-        {
-          "id": "p_1780816143260_qtp7",
-          "name": "AI笔记整理",
-          "url": "https://vcnnr111xqu6.feishu.cn/mindnotes/Z0Emb4noVm23yDnXMsjcBwxBnTe",
-          "description": "从YouTube、B站、抖音等渠道学习到的\n纯个人爱好",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780816383108_a1y1",
-          "name": "api合集1",
-          "url": "https://api.daheiai.com/#official",
-          "description": "推荐",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780816434004_isz1",
-          "name": "api合集2",
-          "url": "http://wang.aihaochi.com/",
-          "description": "便宜",
-          "createdAt": "2026-06-07"
-        },
-        {
-          "id": "p_1780843810802_b7vx",
-          "name": "claude.md",
-          "url": "https://vcnnr111xqu6.feishu.cn/docx/KAJLd61qBoCxZyxRKOBcmAIrnxd",
-          "description": "经常使用",
-          "createdAt": "2026-06-07"
-        }
-      ]
-    }
-  ]
+const statusClassMap = {
+  已完成: 'completed',
+  进行中: 'progressing',
+  迭代中: 'iterating',
+  待补充: 'pending'
 };
 
-function getData() {
-  const raw = localStorage.getItem('portfolio-data');
-  if (!raw) {
-    const defaultData = { ...DEFAULT_DATA };
-    saveData(defaultData);
-    return JSON.parse(JSON.stringify(defaultData));
-  }
-
-  const data = JSON.parse(raw);
-
-  // 版本检查：版本不匹配时用默认数据覆盖（确保旧缓存数据能更新）
-  if (data._version !== DATA_VERSION) {
-    saveData(DEFAULT_DATA);
-    return JSON.parse(JSON.stringify(DEFAULT_DATA));
-  }
-
-  return data;
-}
-
-function saveData(data) {
-  localStorage.setItem('portfolio-data', JSON.stringify(data));
-}
-
-// ===== Toast 通知 =====
-function showToast(message, type, duration = 3000) {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  if (type !== 'loading') {
-    setTimeout(() => {
-      toast.classList.add('toast-out');
-      setTimeout(() => toast.remove(), 250);
-    }, duration);
-  }
-}
-
-// ===== 工具 =====
-function generateId() {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-}
+const categoryAccentMap = {
+  'data-analysis': '#2563eb',
+  agent: '#6366f1',
+  'ai-learning': '#059669'
+};
 
 function getCategoryIdFromUrl() {
   return new URLSearchParams(window.location.search).get('id') || '';
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
+function escapeHtml(value) {
   const div = document.createElement('div');
-  div.textContent = str;
+  div.textContent = value || '';
   return div.innerHTML;
 }
 
-function escapeUrl(str) {
-  if (!str) return '#';
-  if (str.startsWith('http://') || str.startsWith('https://')) return str;
-  return 'https://' + str;
+function escapeUrl(value) {
+  if (!value) return '#';
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  return `https://${value}`;
 }
 
-// ===== 滚动可见性动画 =====
+function generateId() {
+  return `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function cloneData(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function showToast(message, type = 'success', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-out');
+    setTimeout(() => toast.remove(), 250);
+  }, duration);
+}
+
 function initScrollReveal() {
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
           observer.unobserve(entry.target);
@@ -182,14 +75,150 @@ function initScrollReveal() {
     },
     { threshold: 0.05, rootMargin: '0px 0px -30px 0px' }
   );
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 }
 
-// ===== 页面初始化 =====
-function loadCategory() {
-  const catId = getCategoryIdFromUrl();
-  const data = getData();
-  currentCategory = data.categories.find(c => c.id === catId);
+function initBackToTop() {
+  const button = document.getElementById('backToTop');
+  if (!button || button.dataset.bound === 'true') return;
+
+  button.dataset.bound = 'true';
+  button.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  window.addEventListener('scroll', () => {
+    button.classList.toggle('visible', window.scrollY > 300);
+  });
+}
+
+function setManageButtonState() {
+  const fab = document.getElementById('fabManage');
+  const fabAdd = document.getElementById('fabAdd');
+  if (!fab || !fabAdd) return;
+
+  if (isAdminMode) {
+    fab.classList.add('active');
+    fab.innerHTML = '✕';
+    fabAdd.classList.add('visible');
+    return;
+  }
+
+  fab.classList.remove('active');
+  fab.innerHTML = '⚙';
+  fabAdd.classList.remove('visible');
+}
+
+function setLoginError(message) {
+  const el = document.getElementById('loginError');
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = message ? 'block' : 'none';
+}
+
+function setFormError(message) {
+  const el = document.getElementById('formError');
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = message ? 'block' : 'none';
+}
+
+function showLoginModal() {
+  setLoginError('');
+  document.getElementById('inputLoginPassword').value = '';
+  document.getElementById('passwordModal').classList.add('active');
+  setTimeout(() => document.getElementById('inputLoginPassword').focus(), 100);
+}
+
+function hideLoginModal() {
+  document.getElementById('passwordModal').classList.remove('active');
+}
+
+function renderCategoryError(message) {
+  document.getElementById('categoryTitle').textContent = '加载失败';
+  document.getElementById('projectGrid').innerHTML = `
+    <div class="empty-state">
+      <span class="empty-icon">⚠</span>
+      <p>${escapeHtml(message)}</p>
+      <button class="btn btn-outline btn-sm home-retry" type="button" onclick="location.reload()">重新加载</button>
+    </div>
+  `;
+}
+
+function renderProjects() {
+  const grid = document.getElementById('projectGrid');
+  if (!grid) return;
+
+  const projects = currentCategory && Array.isArray(currentCategory.projects) ? currentCategory.projects : [];
+  const accent = categoryAccentMap[currentCategory?.id] || '#2563eb';
+
+  if (!projects.length) {
+    grid.innerHTML = `
+      <div class="empty-state fade-in">
+        <span class="empty-icon">📦</span>
+        <p>暂无作品</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = projects
+    .map((project, idx) => {
+      const delay = Math.min(idx + 1, 6);
+      const status = project.status || '待补充';
+      const tags = Array.isArray(project.tags) ? project.tags : [];
+      const dragAttrs = isAdminMode ? `draggable="true" data-project-id="${project.id}"` : '';
+      const clickAttrs = !isAdminMode && project.url
+        ? `onclick="window.open('${escapeUrl(project.url)}','_blank')" style="cursor:pointer;"`
+        : '';
+
+      return `
+        <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}" ${dragAttrs} ${clickAttrs}>
+          <div class="card-accent" style="background:linear-gradient(90deg, ${accent}, ${accent}66);"></div>
+          <div class="card-body">
+            <div class="card-index" style="border:1.5px solid ${accent}33;color:${accent};">${String(idx + 1).padStart(2, '0')}</div>
+            <div class="project-name">${escapeHtml(project.name)}</div>
+            <div class="project-desc">${escapeHtml(project.description || '暂无简介')}</div>
+            <div class="project-meta">
+              <span class="project-status ${statusClassMap[status] || 'pending'}">${escapeHtml(status)}</span>
+              <div class="tag-list">
+                ${tags.length
+                  ? tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')
+                  : '<span class="tag-pill tag-empty">暂无标签</span>'}
+              </div>
+            </div>
+          </div>
+          ${project.url ? `
+            <div class="card-footer">
+              <a href="${escapeUrl(project.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">访问</a>
+            </div>
+          ` : ''}
+          ${isAdminMode ? `
+            <div class="project-actions">
+              <button class="btn btn-outline btn-sm" draggable="false" onclick="editProject('${project.id}')">✏ 编辑</button>
+              <button class="btn btn-danger btn-sm" draggable="false" onclick="confirmDelete('${project.id}')">🗑 删除</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    })
+    .join('');
+
+  requestAnimationFrame(() => initScrollReveal());
+}
+
+async function loadCategory() {
+  const categoryId = getCategoryIdFromUrl();
+  const dataResult = await PortfolioFirebase.loadPortfolioData();
+
+  if (!dataResult.ok) {
+    renderCategoryError(dataResult.error || 'Firestore 数据加载失败');
+    return;
+  }
+
+  portfolioData = dataResult.data;
+  currentCategory = portfolioData.categories.find((category) => category.id === categoryId) || null;
 
   if (!currentCategory) {
     document.getElementById('categoryTitle').textContent = '分类未找到';
@@ -202,132 +231,133 @@ function loadCategory() {
     return;
   }
 
-  document.getElementById('categoryTitle').textContent = currentCategory.name + ' · 共 ' + currentCategory.projects.length + ' 个项目';
-
-  // 检查是否已有管理员会话
-  if (sessionStorage.getItem('portfolio-admin') === 'true') {
-    enterAdminMode();
-  }
-
+  document.getElementById('categoryTitle').textContent = `${currentCategory.name} · 共 ${currentCategory.projects.length} 个项目`;
   renderProjects();
 }
 
-// ===== 渲染作品卡片 =====
-function renderProjects() {
-  const grid = document.getElementById('projectGrid');
-  const projects = currentCategory.projects;
-
-  // 每张卡片去掉彩虹色，改为分类统一的强调色
-  const categoryColors = {
-    'data-analysis': '#2563eb',
-    'agent':         '#6366f1',
-    'ai-learning':   '#059669'
-  };
-  const accent = categoryColors[currentCategory.id] || '#2563eb';
-
-  if (!projects || projects.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state fade-in">
-        <span class="empty-icon">📦</span>
-        <p>暂无作品</p>
-      </div>
-    `;
+async function bootstrapCategory() {
+  const initResult = await PortfolioFirebase.initFirebase();
+  if (!initResult.ok) {
+    renderCategoryError(initResult.error);
     return;
   }
 
-  grid.innerHTML = projects.map((proj, idx) => {
-    const delay = Math.min(idx + 1, 6);
-    return `
-      <div class="project-card reveal delay-${delay}${isAdminMode ? ' admin-mode' : ''}"
-           ${isAdminMode ? `draggable="true" data-project-id="${proj.id}"` : ''}
-           ${(!isAdminMode && proj.url) ? `onclick="window.open('${escapeUrl(proj.url)}','_blank')"` : ''}
-           ${(!isAdminMode && proj.url) ? 'style="cursor:pointer;"' : ''}>
-        <div class="card-accent" style="background:${accent};"></div>
-        <div class="card-body">
-          <div class="project-name">${escapeHtml(proj.name)}</div>
-          <div class="project-desc">${escapeHtml(proj.description || '暂无简介')}</div>
-        </div>
-        <div class="card-footer">
-          ${proj.url ? `
-          <a href="${escapeUrl(proj.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            访问
-          </a>` : ''}
-        </div>
-        <div class="project-actions">
-          <button class="btn btn-outline btn-sm" draggable="false" onclick="editProject('${proj.id}')">✏ 编辑</button>
-          <button class="btn btn-danger btn-sm" draggable="false" onclick="confirmDelete('${proj.id}')">🗑 删除</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  currentAuthUser = initResult.auth ? initResult.auth.currentUser : null;
 
-  // 触发滚动动画
-  requestAnimationFrame(() => initScrollReveal());
-}
+  PortfolioFirebase.onAuthChange(async (user) => {
+    currentAuthUser = user;
 
-// ===== 密码验证弹窗 =====
-function showPasswordModal() {
-  document.getElementById('inputPassword').value = '';
-  document.getElementById('passwordError').style.display = 'none';
-  document.getElementById('passwordModal').classList.add('active');
-  setTimeout(() => document.getElementById('inputPassword').focus(), 100);
-}
+    if (PortfolioFirebase.isAdminUser(user)) {
+      const seedResult = await PortfolioFirebase.ensureAdminSeed();
+      if (seedResult.ok && seedResult.seeded) {
+        await loadCategory();
+      }
 
-function hidePasswordModal() {
-  document.getElementById('passwordModal').classList.remove('active');
-}
+      if (!isAdminMode) {
+        enterAdminMode();
+      } else {
+        setManageButtonState();
+        renderProjects();
+      }
+      return;
+    }
 
-function verifyPassword() {
-  const pwd = document.getElementById('inputPassword').value;
-  if (pwd === ADMIN_PASSWORD) {
-    hidePasswordModal();
-    sessionStorage.setItem('portfolio-admin', 'true');
+    if (isAdminMode) {
+      exitAdminMode();
+      showToast('已退出管理模式', 'success');
+    } else {
+      setManageButtonState();
+      renderProjects();
+    }
+  });
+
+  await loadCategory();
+
+  if (PortfolioFirebase.isAdminUser(currentAuthUser)) {
     enterAdminMode();
-  } else {
-    document.getElementById('passwordError').style.display = 'block';
-    document.getElementById('inputPassword').value = '';
-    document.getElementById('inputPassword').focus();
   }
 }
 
-// ===== 管理模式 =====
+function isSignedInAdmin() {
+  return PortfolioFirebase.isAdminUser(currentAuthUser);
+}
+
 function enterAdminMode() {
+  if (!isSignedInAdmin()) {
+    showLoginModal();
+    return;
+  }
+
   isAdminMode = true;
-  const fab = document.getElementById('fabManage');
-  const fabAdd = document.getElementById('fabAdd');
-  fab.classList.add('active');
-  fab.innerHTML = '✕';
-  fabAdd.classList.add('visible');
+  setManageButtonState();
   renderProjects();
 }
 
 function exitAdminMode() {
   isAdminMode = false;
-  sessionStorage.removeItem('portfolio-admin');
-  const fab = document.getElementById('fabManage');
-  const fabAdd = document.getElementById('fabAdd');
-  fab.classList.remove('active');
-  fab.innerHTML = '⚙';
-  fabAdd.classList.remove('visible');
+  setManageButtonState();
   renderProjects();
 }
 
 function toggleAdminMode() {
   if (isAdminMode) {
     exitAdminMode();
-  } else {
-    showPasswordModal();
+    return;
   }
+
+  if (isSignedInAdmin()) {
+    enterAdminMode();
+    return;
+  }
+
+  showLoginModal();
 }
 
-// ===== 添加 / 编辑 =====
+async function verifyLogin() {
+  const password = document.getElementById('inputLoginPassword').value.trim();
+  if (!password) {
+    setLoginError('请输入登录密码。');
+    return;
+  }
+
+  setLoginError('');
+  const result = await PortfolioFirebase.signInAdmin(password);
+  if (!result.ok) {
+    setLoginError(result.error || '登录失败，请重试。');
+    return;
+  }
+
+  hideLoginModal();
+  currentAuthUser = result.user;
+
+  const seedResult = await PortfolioFirebase.ensureAdminSeed();
+  if (seedResult.ok && seedResult.seeded) {
+    await loadCategory();
+  }
+
+  enterAdminMode();
+  showToast('管理员登录成功', 'success');
+}
+
+function readTagsInput() {
+  const raw = document.getElementById('inputTags').value.trim();
+  if (!raw) return [];
+
+  return raw
+    .split(/[,，\n]+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
 function showFormModal(project) {
   editingProjectId = project ? project.id : null;
+  setFormError('');
   document.getElementById('formModalTitle').textContent = project ? '编辑作品' : '添加作品';
   document.getElementById('inputName').value = project ? project.name : '';
   document.getElementById('inputUrl').value = project ? (project.url || '') : '';
   document.getElementById('inputDesc').value = project ? (project.description || '') : '';
+  document.getElementById('inputTags').value = project && Array.isArray(project.tags) ? project.tags.join(', ') : '';
+  document.getElementById('selectStatus').value = project && project.status ? project.status : '待补充';
   document.getElementById('formModal').classList.add('active');
   setTimeout(() => document.getElementById('inputName').focus(), 100);
 }
@@ -335,64 +365,110 @@ function showFormModal(project) {
 function hideFormModal() {
   document.getElementById('formModal').classList.remove('active');
   editingProjectId = null;
+  setFormError('');
 }
 
-function saveProject() {
-  const name = document.getElementById('inputName').value.trim();
-  const url = document.getElementById('inputUrl').value.trim();
-  const description = document.getElementById('inputDesc').value.trim();
-
-  if (!name) {
-    document.getElementById('inputName').focus();
-    document.getElementById('inputName').style.borderColor = 'rgba(255,80,80,0.6)';
-    setTimeout(() => document.getElementById('inputName').style.borderColor = '', 1500);
+async function saveProject() {
+  if (!isSignedInAdmin()) {
+    setFormError('请先使用管理员账号登录后再保存。');
     return;
   }
 
-  const data = getData();
-  const cat = data.categories.find(c => c.id === currentCategory.id);
-  if (!cat) return;
+  const name = document.getElementById('inputName').value.trim();
+  const url = document.getElementById('inputUrl').value.trim();
+  const description = document.getElementById('inputDesc').value.trim();
+  const tags = readTagsInput();
+  const status = document.getElementById('selectStatus').value;
+
+  if (!name) {
+    setFormError('作品名称不能为空。');
+    document.getElementById('inputName').focus();
+    return;
+  }
+
+  const previousData = cloneData(portfolioData);
+  const category = portfolioData.categories.find((item) => item.id === currentCategory.id);
+  if (!category) {
+    setFormError('当前分类不存在，请刷新后重试。');
+    return;
+  }
 
   if (editingProjectId) {
-    const idx = cat.projects.findIndex(p => p.id === editingProjectId);
-    if (idx !== -1) {
-      cat.projects[idx].name = name;
-      cat.projects[idx].url = url;
-      cat.projects[idx].description = description;
+    const targetIndex = category.projects.findIndex((project) => project.id === editingProjectId);
+    if (targetIndex !== -1) {
+      category.projects[targetIndex] = {
+        ...category.projects[targetIndex],
+        name,
+        url,
+        description,
+        tags,
+        status
+      };
     }
   } else {
-    cat.projects.push({
-      id: generateId(), name, url, description,
+    category.projects.push({
+      id: generateId(),
+      name,
+      url,
+      description,
+      tags,
+      status,
       createdAt: new Date().toISOString().slice(0, 10)
     });
   }
 
-  saveData(data);
-  currentCategory = cat;
+  const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
+  if (!saveResult.ok) {
+    portfolioData = previousData;
+    currentCategory = portfolioData.categories.find((item) => item.id === currentCategory.id) || currentCategory;
+    setFormError(saveResult.error || '保存失败，请重试。');
+    renderProjects();
+    showToast('保存失败', 'error');
+    return;
+  }
+
   hideFormModal();
-  renderProjects();
+  await loadCategory();
+  if (isAdminMode) renderProjects();
+  showToast(editingProjectId ? '作品已更新' : '作品已添加', 'success');
 }
 
-// ===== 删除 =====
 function confirmDelete(projectId) {
-  const project = currentCategory.projects.find(p => p.id === projectId);
+  if (!isSignedInAdmin()) return;
+
+  const project = currentCategory.projects.find((item) => item.id === projectId);
   if (!project) return;
+
   deleteTargetId = projectId;
   document.getElementById('confirmProjectName').textContent = `「${project.name}」`;
   document.getElementById('confirmModal').classList.add('active');
 }
 
-function executeDelete() {
-  if (!deleteTargetId) return;
-  const data = getData();
-  const cat = data.categories.find(c => c.id === currentCategory.id);
-  if (!cat) return;
-  cat.projects = cat.projects.filter(p => p.id !== deleteTargetId);
-  saveData(data);
-  currentCategory = cat;
+async function executeDelete() {
+  if (!deleteTargetId || !isSignedInAdmin()) return;
+
+  const previousData = cloneData(portfolioData);
+  const category = portfolioData.categories.find((item) => item.id === currentCategory.id);
+  if (!category) return;
+
+  category.projects = category.projects.filter((project) => project.id !== deleteTargetId);
+
+  const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
+  if (!saveResult.ok) {
+    portfolioData = previousData;
+    currentCategory = portfolioData.categories.find((item) => item.id === currentCategory.id) || currentCategory;
+    document.getElementById('confirmModal').classList.remove('active');
+    deleteTargetId = null;
+    renderProjects();
+    showToast(saveResult.error || '删除失败，请重试。', 'error');
+    return;
+  }
+
   deleteTargetId = null;
   document.getElementById('confirmModal').classList.remove('active');
-  renderProjects();
+  await loadCategory();
+  if (isAdminMode) renderProjects();
+  showToast('作品已删除', 'success');
 }
 
 function hideConfirmModal() {
@@ -400,147 +476,177 @@ function hideConfirmModal() {
   deleteTargetId = null;
 }
 
-// ===== 拖拽排序（仅管理模式） =====
-function initDragSort() {
+function bindDragSorting() {
   const grid = document.getElementById('projectGrid');
+  if (!grid || grid.dataset.dragBound === 'true') return;
 
-  grid.addEventListener('dragstart', function(e) {
-    const card = e.target.closest('.project-card');
+  grid.dataset.dragBound = 'true';
+
+  grid.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('.project-card');
     if (!card || !isAdminMode) return;
+
     dragSourceId = card.dataset.projectId;
     card.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', dragSourceId);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', dragSourceId);
   });
 
-  grid.addEventListener('dragend', function(e) {
-    const card = e.target.closest('.project-card');
+  grid.addEventListener('dragend', (event) => {
+    const card = event.target.closest('.project-card');
     if (card) card.classList.remove('dragging');
-    grid.querySelectorAll('.project-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+    grid.querySelectorAll('.project-card.drag-over').forEach((el) => el.classList.remove('drag-over'));
     dragSourceId = null;
   });
 
-  grid.addEventListener('dragover', function(e) {
+  grid.addEventListener('dragover', (event) => {
     if (!isAdminMode || !dragSourceId) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
   });
 
-  grid.addEventListener('dragenter', function(e) {
+  grid.addEventListener('dragenter', (event) => {
     if (!isAdminMode || !dragSourceId) return;
-    const card = e.target.closest('.project-card');
+    const card = event.target.closest('.project-card');
     if (card && card.dataset.projectId !== dragSourceId) {
       card.classList.add('drag-over');
     }
   });
 
-  grid.addEventListener('dragleave', function(e) {
-    const card = e.target.closest('.project-card');
+  grid.addEventListener('dragleave', (event) => {
+    const card = event.target.closest('.project-card');
     if (card) {
       card.classList.remove('drag-over');
     }
   });
 
-  grid.addEventListener('drop', function(e) {
-    e.preventDefault();
+  grid.addEventListener('drop', async (event) => {
+    event.preventDefault();
     if (!isAdminMode || !dragSourceId) return;
 
-    const targetCard = e.target.closest('.project-card');
+    const targetCard = event.target.closest('.project-card');
     if (!targetCard) return;
 
     const targetId = targetCard.dataset.projectId;
     if (!targetId || targetId === dragSourceId) return;
 
-    const data = getData();
-    const cat = data.categories.find(c => c.id === currentCategory.id);
-    if (!cat) return;
+    const previousData = cloneData(portfolioData);
+    const category = portfolioData.categories.find((item) => item.id === currentCategory.id);
+    if (!category) return;
 
-    const fromIdx = cat.projects.findIndex(p => p.id === dragSourceId);
-    const toIdx = cat.projects.findIndex(p => p.id === targetId);
-    if (fromIdx === -1 || toIdx === -1) return;
+    const fromIndex = category.projects.findIndex((project) => project.id === dragSourceId);
+    const toIndex = category.projects.findIndex((project) => project.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
 
-    // 移动项目到新位置
-    const [moved] = cat.projects.splice(fromIdx, 1);
-    cat.projects.splice(toIdx, 0, moved);
-
-    saveData(data);
-    currentCategory = cat;
+    const [movedProject] = category.projects.splice(fromIndex, 1);
+    category.projects.splice(toIndex, 0, movedProject);
+    currentCategory = category;
     renderProjects();
+
+    const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
+    if (!saveResult.ok) {
+      portfolioData = previousData;
+      currentCategory = portfolioData.categories.find((item) => item.id === currentCategory.id) || currentCategory;
+      renderProjects();
+      showToast(saveResult.error || '排序保存失败', 'error');
+      return;
+    }
+
+    showToast('排序已更新', 'success');
   });
 }
 
-// ===== 全局暴露 =====
-window.editProject = function(id) {
-  const p = currentCategory.projects.find(p => p.id === id);
-  if (p) showFormModal(p);
+window.editProject = function editProject(projectId) {
+  if (!isSignedInAdmin()) return;
+  const project = currentCategory.projects.find((item) => item.id === projectId);
+  if (project) showFormModal(project);
 };
+
 window.confirmDelete = confirmDelete;
 
-// ===== 事件绑定 =====
-document.addEventListener('DOMContentLoaded', function() {
-  loadCategory();
-  initDragSort();
+document.addEventListener('DOMContentLoaded', () => {
+  const title = document.getElementById('categoryTitle');
+  if (title) title.textContent = '加载中...';
 
-  // 管理模式
+  initBackToTop();
+  bindDragSorting();
+
+  bootstrapCategory().catch((error) => {
+    renderCategoryError(`页面初始化失败：${error && error.message ? error.message : '未知错误'}`);
+  });
+
   document.getElementById('fabManage').addEventListener('click', toggleAdminMode);
 
-  // 密码验证
-  document.getElementById('btnPwdConfirm').addEventListener('click', verifyPassword);
-  document.getElementById('btnPwdCancel').addEventListener('click', hidePasswordModal);
-  document.getElementById('inputPassword').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') verifyPassword();
+  document.getElementById('btnPwdConfirm').addEventListener('click', verifyLogin);
+  document.getElementById('btnPwdCancel').addEventListener('click', hideLoginModal);
+  document.getElementById('inputLoginPassword').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') verifyLogin();
   });
-  document.getElementById('passwordModal').addEventListener('click', function(e) {
-    if (e.target === this) hidePasswordModal();
+  document.getElementById('passwordModal').addEventListener('click', function onOverlayClick(event) {
+    if (event.target === this) hideLoginModal();
   });
 
-  // 添加
-  document.getElementById('fabAdd').addEventListener('click', () => showFormModal(null));
+  document.getElementById('fabAdd').addEventListener('click', () => {
+    if (!isSignedInAdmin()) {
+      showLoginModal();
+      return;
+    }
+    showFormModal(null);
+  });
 
-  // 表单
   document.getElementById('btnFormSave').addEventListener('click', saveProject);
   document.getElementById('btnFormCancel').addEventListener('click', hideFormModal);
-  document.getElementById('formModal').addEventListener('click', function(e) {
-    if (e.target === this) hideFormModal();
+  document.getElementById('formModal').addEventListener('click', function onOverlayClick(event) {
+    if (event.target === this) hideFormModal();
   });
 
-  // 删除确认
   document.getElementById('btnConfirmDelete').addEventListener('click', executeDelete);
   document.getElementById('btnConfirmCancel').addEventListener('click', hideConfirmModal);
-  document.getElementById('confirmModal').addEventListener('click', function(e) {
-    if (e.target === this) hideConfirmModal();
+  document.getElementById('confirmModal').addEventListener('click', function onOverlayClick(event) {
+    if (event.target === this) hideConfirmModal();
   });
 
-  // 返回顶部
-  const backBtn = document.getElementById('backToTop');
-  backBtn.addEventListener('click', function() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-  window.addEventListener('scroll', function() {
-    backBtn.classList.toggle('visible', window.scrollY > 300);
+  document.getElementById('inputName').addEventListener('keydown', function onNameKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      document.getElementById('inputUrl').focus();
+    }
   });
 
-  // Enter 键跳转
-  document.getElementById('inputName').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('inputUrl').focus(); }
+  document.getElementById('inputUrl').addEventListener('keydown', function onUrlKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      document.getElementById('inputDesc').focus();
+    }
   });
-  document.getElementById('inputUrl').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('inputDesc').focus(); }
+
+  document.getElementById('inputDesc').addEventListener('keydown', function onDescKeydown(event) {
+    if (event.key !== 'Enter') return;
+
+    if (event.ctrlKey || event.shiftKey) {
+      event.preventDefault();
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      this.value = `${this.value.slice(0, start)}\n${this.value.slice(end)}`;
+      this.selectionStart = this.selectionEnd = start + 1;
+      return;
+    }
+
+    event.preventDefault();
+    document.getElementById('inputTags').focus();
   });
-  document.getElementById('inputDesc').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      if (e.ctrlKey || e.shiftKey) {
-        // Ctrl+Enter / Shift+Enter → 手动插入换行
-        e.preventDefault();
-        const start = this.selectionStart;
-        const end = this.selectionEnd;
-        this.value = this.value.slice(0, start) + '\n' + this.value.slice(end);
-        this.selectionStart = this.selectionEnd = start + 1;
-      } else {
-        // Enter → 保存
-        e.preventDefault();
-        saveProject();
-      }
+
+  document.getElementById('inputTags').addEventListener('keydown', function onTagsKeydown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      document.getElementById('selectStatus').focus();
+    }
+  });
+
+  document.getElementById('selectStatus').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveProject();
     }
   });
 });
