@@ -83,7 +83,7 @@ a {
 /* backdrop-filter 降级方案 */
 @supports not (backdrop-filter: blur(1px)) {
   .glass-card, .category-card, .project-card, .category-header,
-  .modal-box, .fab, .fab-add {
+  .modal-box, .fab, .fab-add, .fab-folder {
     background: rgba(255, 255, 255, 0.85) !important;
   }
 }
@@ -214,6 +214,12 @@ a {
 .btn-sm {
   padding: 6px 16px;
   font-size: 12px;
+}
+
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 8px;
 }
 
 .btn-icon {
@@ -970,6 +976,128 @@ textarea.input-field {
   transform: scale(1.1);
 }
 
+/* 浮动分组按钮（管理模式下） */
+.fab-folder {
+  position: fixed;
+  bottom: 168px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #1a2a4a;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(26, 42, 74, 0.12);
+}
+
+.fab-folder.visible {
+  display: flex;
+}
+
+.fab-folder:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.1);
+}
+
+/* ============================================
+   管理员模式：侧边栏分组
+   ============================================ */
+.admin-sidebar {
+  position: fixed;
+  top: 90px;
+  left: 0;
+  width: 180px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 16px 12px;
+  z-index: 50;
+  display: none;
+}
+
+.admin-sidebar.visible {
+  display: block;
+  animation: sidebarIn 0.3s ease;
+}
+
+@keyframes sidebarIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(26, 42, 74, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(26, 42, 74, 0.08);
+}
+
+.sidebar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  border: 2px dashed transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a2a4a;
+  cursor: default;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.sidebar-group:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-group.sidebar-drop-hover {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.sidebar-group-count {
+  font-size: 11px;
+  color: rgba(26, 42, 74, 0.35);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.project-grid.has-sidebar {
+  margin-left: 200px;
+}
+
+.project-group-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(26, 42, 74, 0.5);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
 /* ============================================
    模态框
    ============================================ */
@@ -1250,6 +1378,31 @@ textarea.input-field {
     font-size: 18px;
     bottom: 78px;
     right: 20px;
+  }
+
+  .fab-folder {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+    bottom: 130px;
+    right: 20px;
+    border-radius: 12px;
+  }
+
+  .admin-sidebar {
+    width: 140px;
+    top: 70px;
+    height: calc(100vh - 90px);
+    padding: 12px 8px;
+  }
+
+  .sidebar-group {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .project-grid.has-sidebar {
+    margin-left: 150px;
   }
 
   .back-to-top {

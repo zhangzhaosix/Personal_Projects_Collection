@@ -150,4 +150,6 @@ git commit -m "修改内容描述"
 git push || git push || git push
 ```
 
+> **推送分支规则**：文档中未特别指定推送分支时，固定推送到 `main` 分支。当前本地在 `master` 分支时，使用 `git push origin master:main` 推送。
+>
 > **推送规则**：远程地址已固定为 GitHub 时，无需再切换。如果是第一次上传，必须先向用户确认仓库名称，创建仓库后再上传。

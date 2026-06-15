@@ -142,7 +142,8 @@
       description: String(source.description || '').trim(),
       createdAt: source.createdAt || '',
       tags: normalizeTags(source.tags),
-      status
+      status,
+      groupId: source.groupId || null
     };
   }
 
@@ -153,6 +154,13 @@
         ? source.categories.find((category) => category && category.id === defaultCategory.id)
         : null;
 
+      const groups = Array.isArray(sourceCategory?.groups)
+        ? sourceCategory.groups.map(g => ({
+            id: String(g.id || generateId('g')),
+            name: String(g.name || '未命名分组').trim()
+          }))
+        : [];
+
       const projects = Array.isArray(sourceCategory?.projects)
         ? sourceCategory.projects.map(normalizeProject)
         : [];
@@ -160,6 +168,7 @@
       return {
         id: defaultCategory.id,
         name: sourceCategory?.name || defaultCategory.name,
+        groups,
         projects
       };
     });
@@ -384,8 +393,8 @@
     return Boolean(user && user.email === ADMIN_EMAIL);
   }
 
-  function generateId() {
-    return `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  function generateId(prefix = 'p') {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
   }
 
   globalThis.PortfolioFirebase = {
