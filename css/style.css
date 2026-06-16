@@ -670,6 +670,36 @@ textarea.input-field {
   box-shadow: 0 16px 48px rgba(26, 42, 74, 0.1);
 }
 
+/* 分组筛选 Tab 栏 */
+.group-tabs {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.group-tab {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(26, 42, 74, 0.6);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.group-tab:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: #1a2a4a;
+}
+.group-tab.active {
+  background: #1a2a4a;
+  color: #fff;
+  border-color: #1a2a4a;
+}
+
 /* 卡片悬停微光效果 */
 .project-card::before {
   content: '';
@@ -1066,6 +1096,12 @@ textarea.input-field {
 
 .sidebar-group:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-group.active {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 .sidebar-group.sidebar-drop-hover {

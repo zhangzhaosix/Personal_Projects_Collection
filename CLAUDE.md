@@ -134,9 +134,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **用户确认满意后**（用户说“可以了”/“没问题”/“满意”等确认信号），执行：
 
-1. 检查项目中是否有 `rename` 文件用于说明项目：
+1. 检查项目中是否有 `README` 文件用于说明项目：
    - 如果没有，就创建一个
-   - 如果已有，并且项目进行了改动，就对应修改 `rename` 文件内容
+   - 如果已有，就把项目的功能进行说明，并且每次项目有了新改动，就对应修改 `README` 文件内容
 2. 提交代码：
 
 ```bash

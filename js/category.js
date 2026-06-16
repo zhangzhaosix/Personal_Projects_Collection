@@ -12,6 +12,7 @@ let deleteTargetId = null;
 let dragSourceId = null;
 let editingGroupId = null;
 let deleteGroupTargetId = null;
+let activeGroupFilter = null;
 
 const SESSION_KEY = 'portfolio_admin_auth';
 
@@ -165,9 +166,9 @@ function renderProjectCard(project, localIndex, accent) {
     ? `onclick="window.open('${escapeUrl(project.url)}','_blank')" style="cursor:pointer;"`
     : '';
 
-  // Find group badge in admin mode
+  // Find group badge
   let groupBadge = '';
-  if (isAdminMode && project.groupId && currentCategory?.groups) {
+  if (project.groupId && currentCategory?.groups) {
     const group = currentCategory.groups.find((g) => g.id === project.groupId);
     if (group) {
       groupBadge = `<div class="project-group-badge">📁 ${escapeHtml(group.name)}</div>`;
@@ -224,14 +225,22 @@ function renderAdminProjects() {
   }
   sidebar.classList.add('visible');
 
-  // Populate sidebar
+  // Populate sidebar with clickable groups
   let sidebarHtml = '<div class="sidebar-title">分组</div>';
-  const assignedIds = new Set();
+
+  // "全部" option
+  sidebarHtml += `
+    <div class="sidebar-group${!activeGroupFilter ? ' active' : ''}" data-group-id="__all__">
+      <span>📂</span>
+      <span>全部项目</span>
+      <span class="sidebar-group-count">${projects.length}</span>
+    </div>
+  `;
 
   groups.forEach((group) => {
     const count = projects.filter((p) => p.groupId === group.id).length;
     sidebarHtml += `
-      <div class="sidebar-group" data-group-id="${group.id}">
+      <div class="sidebar-group${activeGroupFilter === group.id ? ' active' : ''}" data-group-id="${group.id}" style="cursor:pointer;">
         <span>📁</span>
         <span>${escapeHtml(group.name)}</span>
         <span class="sidebar-group-count">${count}</span>
@@ -240,22 +249,45 @@ function renderAdminProjects() {
   });
 
   const ungroupedCount = projects.filter((p) => !p.groupId || !groups.some((g) => g.id === p.groupId)).length;
-  sidebarHtml += `
-    <div class="sidebar-group" data-group-id="">
-      <span>📂</span>
-      <span>${groups.length ? '未分组' : '全部项目'}</span>
-      <span class="sidebar-group-count">${ungroupedCount}</span>
-    </div>
-  `;
+  if (groups.length) {
+    sidebarHtml += `
+      <div class="sidebar-group${activeGroupFilter === '__ungrouped__' ? ' active' : ''}" data-group-id="__ungrouped__" style="cursor:pointer;">
+        <span>📂</span>
+        <span>未分组</span>
+        <span class="sidebar-group-count">${ungroupedCount}</span>
+      </div>
+    `;
+  }
 
   sidebar.innerHTML = sidebarHtml;
 
-  // Render project grid as flat list with sidebar offset
+  // Bind sidebar group click events for filtering
+  sidebar.querySelectorAll('.sidebar-group').forEach((el) => {
+    el.addEventListener('click', () => {
+      const gid = el.dataset.groupId;
+      if (gid === '__all__') activeGroupFilter = null;
+      else if (gid === '__ungrouped__') activeGroupFilter = '__ungrouped__';
+      else activeGroupFilter = gid;
+      renderAdminProjects();
+    });
+  });
+
+  // Filter projects by active group
+  let filtered;
+  if (activeGroupFilter === '__ungrouped__') {
+    filtered = projects.filter((p) => !p.groupId || !groups.some((g) => g.id === p.groupId));
+  } else if (activeGroupFilter) {
+    filtered = projects.filter((p) => p.groupId === activeGroupFilter);
+  } else {
+    filtered = projects;
+  }
+
+  // Render project grid with sidebar offset
   grid.classList.add('has-sidebar');
 
   if (!projects.length) {
     grid.innerHTML = `
-      <div class="empty-state fade-in">
+      <div class="empty-state fade-in" style="grid-column:1/-1">
         <span class="empty-icon">📦</span>
         <p>暂无作品</p>
       </div>
@@ -264,7 +296,18 @@ function renderAdminProjects() {
     return;
   }
 
-  grid.innerHTML = projects
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="empty-state fade-in" style="grid-column:1/-1">
+        <span class="empty-icon">📂</span>
+        <p>该分组暂无作品</p>
+      </div>
+    `;
+    requestAnimationFrame(() => initScrollReveal());
+    return;
+  }
+
+  grid.innerHTML = filtered
     .map((project, idx) => renderProjectCard(project, idx, accent))
     .join('');
 
@@ -276,8 +319,26 @@ function renderViewProjects() {
   const grid = document.getElementById('projectGrid');
   if (!grid) return;
 
+  const groups = currentCategory?.groups || [];
   const projects = currentCategory && Array.isArray(currentCategory.projects) ? currentCategory.projects : [];
   const accent = categoryAccentMap[currentCategory?.id] || '#2563eb';
+
+  // Build group filter tabs
+  let tabsHtml = '';
+  if (groups.length) {
+    tabsHtml = '<div class="group-tabs">';
+    tabsHtml += `<span class="group-tab${!activeGroupFilter ? ' active' : ''}" data-group-id="">全部</span>`;
+    groups.forEach((group) => {
+      const count = projects.filter((p) => p.groupId === group.id).length;
+      tabsHtml += `<span class="group-tab${activeGroupFilter === group.id ? ' active' : ''}" data-group-id="${group.id}">📁 ${escapeHtml(group.name)} (${count})</span>`;
+    });
+    tabsHtml += '</div>';
+  }
+
+  // Filter projects by active group
+  const filtered = activeGroupFilter
+    ? projects.filter((p) => p.groupId === activeGroupFilter)
+    : projects;
 
   if (!projects.length) {
     grid.innerHTML = `
@@ -289,9 +350,33 @@ function renderViewProjects() {
     return;
   }
 
-  grid.innerHTML = projects
-    .map((project, idx) => renderProjectCard(project, idx, accent))
-    .join('');
+  if (!filtered.length) {
+    grid.innerHTML = `
+      ${tabsHtml}
+      <div class="empty-state fade-in" style="grid-column:1/-1">
+        <span class="empty-icon">📂</span>
+        <p>该分组暂无作品</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = `
+    ${tabsHtml}
+    ${filtered.map((project, idx) => renderProjectCard(project, idx, accent)).join('')}
+  `;
+
+  // Bind tab click events
+  if (groups.length) {
+    grid.querySelectorAll('.group-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const gid = tab.dataset.groupId;
+        activeGroupFilter = gid || null;
+        renderViewProjects();
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
 
   requestAnimationFrame(() => initScrollReveal());
 }
@@ -386,12 +471,14 @@ function enterAdminMode() {
   }
 
   isAdminMode = true;
+  activeGroupFilter = null;
   setManageButtonState();
   renderProjects();
 }
 
 function exitAdminMode() {
   isAdminMode = false;
+  activeGroupFilter = null;
   sessionStorage.removeItem(SESSION_KEY);
   PortfolioFirebase.signOutAdmin();
   document.getElementById('adminSidebar')?.classList.remove('visible');
