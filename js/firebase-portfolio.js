@@ -103,7 +103,10 @@
           }
         ]
       }
-    ]
+    ],
+    notes: [],
+    featuredWorks: [],
+    featuredNotes: []
   };
 
   let cachedModulesPromise = null;
@@ -147,6 +150,20 @@
     };
   }
 
+  function normalizeNote(note) {
+    const source = note && typeof note === 'object' ? note : {};
+    return {
+      id: source.id || generateId('n'),
+      title: String(source.title || '').trim(),
+      excerpt: String(source.excerpt || '').trim(),
+      tags: normalizeTags(source.tags),
+      date: source.date || '',
+      readTime: source.readTime || '5 分钟阅读',
+      category: String(source.category || '其他').trim(),
+      url: source.url || ''
+    };
+  }
+
   function normalizePortfolioData(data) {
     const source = data && typeof data === 'object' ? data : {};
     const categories = DEFAULT_DATA.categories.map((defaultCategory) => {
@@ -173,7 +190,12 @@
       };
     });
 
-    return { categories };
+    return {
+      categories,
+      notes: Array.isArray(source.notes) ? source.notes.map(normalizeNote) : [],
+      featuredWorks: Array.isArray(source.featuredWorks) ? source.featuredWorks : [],
+      featuredNotes: Array.isArray(source.featuredNotes) ? source.featuredNotes : []
+    };
   }
 
   function isFirebaseConfigured() {
@@ -411,7 +433,9 @@
     isAdminUser,
     normalizePortfolioData,
     normalizeProject,
+    normalizeNote,
     normalizeTags,
+    generateId,
     getAuthReady,
     getDbReady
   };

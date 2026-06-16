@@ -142,23 +142,46 @@ function renderHomeError(message) {
   `;
 }
 
+const WORK_NAMES_FALLBACK = [
+  '【抖音 达人种草 数据分析 自动化报表】',
+  '【抖音电商 数据监控 BI看板】',
+  '电商 达人种草 洞察分析 报告',
+  '抖音 电商直播 用户行为 分析',
+  '日常清单网页',
+  '作品集网页',
+  '音乐合集'
+];
+
 function renderFeaturedProjects() {
   const el = document.getElementById('featuredSection');
-  if (!el || !portfolioData || !Array.isArray(portfolioData.categories)) return;
+  if (!el || !portfolioData) return;
 
+  const featuredIds = Array.isArray(portfolioData.featuredWorks) ? portfolioData.featuredWorks : [];
   const featured = [];
-  const maxFeatured = 4;
 
-  for (const category of portfolioData.categories) {
-    const projects = Array.isArray(category.projects) ? category.projects : [];
-    for (const project of projects) {
-      if (featured.length >= maxFeatured) break;
-      featured.push({
-        ...project,
-        categoryName: category.name
+  if (featuredIds.length && Array.isArray(portfolioData.categories)) {
+    portfolioData.categories.forEach((category) => {
+      if (!Array.isArray(category.projects)) return;
+      category.projects.forEach((project) => {
+        if (featuredIds.includes(project.id)) {
+          featured.push({ ...project, categoryName: category.name });
+        }
       });
+    });
+  }
+
+  // Fallback: no featured selected yet, show first 2 works
+  if (!featured.length && Array.isArray(portfolioData.categories)) {
+    for (const category of portfolioData.categories) {
+      if (!Array.isArray(category.projects)) continue;
+      for (const project of category.projects) {
+        if (featured.length >= 2) break;
+        if (WORK_NAMES_FALLBACK.includes(project.name)) {
+          featured.push({ ...project, categoryName: category.name });
+        }
+      }
+      if (featured.length >= 2) break;
     }
-    if (featured.length >= maxFeatured) break;
   }
 
   if (!featured.length) {
@@ -175,7 +198,7 @@ function renderFeaturedProjects() {
           .map(
             (project, idx) => `
               <a class="featured-card" href="${escapeUrl(project.url)}" target="_blank" rel="noopener" style="animation-delay:${idx * 0.1}s;">
-                <div class="featured-category">${escapeHtml(project.categoryName)}</div>
+                <div class="featured-category">${escapeHtml(project.categoryName || '')}</div>
                 <div class="featured-name">${escapeHtml(project.name)}</div>
                 <div class="featured-desc">${escapeHtml(project.description || '暂无简介')}</div>
               </a>
@@ -183,6 +206,65 @@ function renderFeaturedProjects() {
           )
           .join('')}
       </div>
+    </div>
+  `;
+}
+
+function renderNotesSection() {
+  const el = document.getElementById('notesSection');
+  if (!el || !portfolioData) return;
+
+  const featuredIds = Array.isArray(portfolioData.featuredNotes) ? portfolioData.featuredNotes : [];
+  const allNotes = Array.isArray(portfolioData.notes) ? portfolioData.notes : [];
+  let notes = featuredIds.length
+    ? allNotes.filter((n) => featuredIds.includes(n.id))
+    : allNotes.slice(0, 3);
+
+  // Fallback: no notes yet, show projects not in work list
+  if (!notes.length && Array.isArray(portfolioData.categories)) {
+    const fallbackNotes = [];
+    for (const category of portfolioData.categories) {
+      if (!Array.isArray(category.projects)) continue;
+      for (const project of category.projects) {
+        if (fallbackNotes.length >= 3) break;
+        if (!WORK_NAMES_FALLBACK.includes(project.name)) {
+          const tags = Array.isArray(project.tags) ? project.tags : [];
+          fallbackNotes.push({
+            title: project.name,
+            excerpt: project.description || '',
+            tags,
+            date: project.createdAt || ''
+          });
+        }
+      }
+      if (fallbackNotes.length >= 3) break;
+    }
+    notes = fallbackNotes;
+  }
+
+  if (!notes.length) {
+    el.style.display = 'none';
+    return;
+  }
+
+  const previewNotes = notes.slice(0, 3);
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="section-header">
+      <h2 class="section-title">最新笔记</h2>
+    </div>
+    <div class="notes-preview-grid">
+      ${previewNotes.map(note => {
+        const tags = Array.isArray(note.tags) ? note.tags : [];
+        return `
+          <div class="note-preview-card">
+            <span class="note-preview-tag">${escapeHtml(tags.length > 0 ? tags[0] : '笔记')}</span>
+            <h3 class="note-preview-title">${escapeHtml(note.title)}</h3>
+            <p class="note-preview-excerpt">${escapeHtml(note.excerpt || '')}</p>
+            <span class="note-preview-meta">${escapeHtml(note.date || '')}</span>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
@@ -201,7 +283,7 @@ function renderContact() {
   `;
 }
 
-function renderCategories() {
+/* function renderCategories() {
   const grid = document.getElementById('categoryGrid');
   if (!grid || !portfolioData || !Array.isArray(portfolioData.categories)) return;
 
@@ -264,7 +346,7 @@ function renderCategories() {
       el.style.strokeDashoffset = el.getAttribute('stroke-dashoffset');
     });
   }, 300);
-}
+} */
 
 async function bootstrapHome() {
   const initResult = await PortfolioFirebase.initFirebase();
@@ -277,7 +359,7 @@ async function bootstrapHome() {
   if (dataResult.ok) {
     portfolioData = dataResult.data;
     renderFeaturedProjects();
-    renderCategories();
+    renderNotesSection();
     renderContact();
     requestAnimationFrame(() => initScrollReveal());
     return;
@@ -290,7 +372,7 @@ async function bootstrapHome() {
       if (retryResult.ok) {
         portfolioData = retryResult.data;
         renderFeaturedProjects();
-        renderCategories();
+        renderNotesSection();
         renderContact();
         requestAnimationFrame(() => initScrollReveal());
         return;

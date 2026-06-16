@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>作品分类 · Shine</title>
+  <title>作品集 · Shine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="css/style.css">
@@ -15,40 +15,53 @@
       <a href="index.html" class="nav-logo">Shine</a>
       <div class="nav-links">
         <a href="index.html" class="nav-item">首页</a>
-        <a href="works.html" class="nav-item">作品</a>
+        <a href="works.html" class="nav-item active">作品</a>
         <a href="notes.html" class="nav-item">笔记</a>
         <a href="index.html#contactSection" class="nav-item">联系</a>
       </div>
     </div>
   </nav>
 
-  <div class="category-page">
-    <!-- 页面头部 -->
-    <div class="category-header">
-      <a href="index.html" class="back-link">
-        <span>←</span> 返回首页
-      </a>
-      <h2 class="category-title" id="categoryTitle">加载中...</h2>
-      <div style="width:70px;"></div>
-    </div>
+  <div class="works-page">
+    <!-- 页面头部 Hero -->
+    <section class="page-hero fade-in">
+      <div class="page-hero-content">
+        <h1 class="page-hero-title">作品集</h1>
+        <p class="page-hero-sub">实习作品集：SQL 取数 · 自动化报表 · BI 可视化 · 分析复盘</p>
+        <div class="search-bar" style="margin-top:24px;max-width:400px;">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" class="search-input" id="worksSearchInput" placeholder="搜索作品标题或关键词..." aria-label="搜索作品">
+        </div>
+      </div>
+    </section>
 
     <!-- 作品网格 -->
-    <div class="project-grid" id="projectGrid">
+    <div class="project-grid" id="worksGrid">
       <!-- 由 JS 动态渲染 -->
+    </div>
+
+    <!-- 分页器 -->
+    <div class="pagination" id="worksPagination">
+      <!-- 由 JS 动态渲染 -->
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+      <span>© 2026 Shine ·项目记录成长 | 笔记沉淀思考</span>
     </div>
   </div>
 
   <!-- 浮动管理按钮 -->
   <button class="fab" id="fabManage" title="管理模式">⚙</button>
   <button class="fab-add" id="fabAdd" title="添加作品">+</button>
-  <button class="fab-folder" id="fabFolder" title="新建分组">📁</button>
-
-  <!-- 密码验证模态框 -->
   <button class="back-to-top" id="backToTop" title="Back To Top">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- 密码验证模态框 -->
   <div class="modal-overlay" id="passwordModal">
     <div class="modal-box" style="max-width:380px;">
       <div class="modal-title" style="text-align:center;">管理员登录</div>
@@ -66,7 +79,7 @@
     </div>
   </div>
 
-  <!-- 添加/编辑模态框 -->
+  <!-- 添加/编辑作品模态框 -->
   <div class="modal-overlay" id="formModal">
     <div class="modal-box">
       <div class="modal-title" id="formModalTitle">添加作品</div>
@@ -79,35 +92,11 @@
         <textarea class="input-field" id="inputDesc" placeholder="作品简介" maxlength="200" rows="3"></textarea>
         <label class="field-label" for="inputTags">标签</label>
         <input type="text" class="input-field" id="inputTags" placeholder="用逗号分隔，例如：数据分析, BI" maxlength="200">
-        <label class="field-label" for="selectStatus">状态</label>
-        <select class="input-field" id="selectStatus">
-          <option value="已完成">已完成</option>
-          <option value="进行中">进行中</option>
-          <option value="迭代中">迭代中</option>
-          <option value="待补充">待补充</option>
-        </select>
-        <p class="field-helper">标签会按逗号拆分后保存到 Firestore，状态为固定枚举值。</p>
         <p id="formError" class="field-error" style="display:none;">保存失败，请重试。</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" id="btnFormCancel">取消</button>
         <button class="btn btn-solid" id="btnFormSave">保存</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 分组创建/编辑模态框 -->
-  <div class="modal-overlay" id="groupFormModal">
-    <div class="modal-box" style="max-width:380px;">
-      <div class="modal-title" id="groupFormModalTitle">新建分组</div>
-      <div class="modal-body">
-        <label class="field-label" for="inputGroupName">分组名称</label>
-        <input type="text" class="input-field" id="inputGroupName" placeholder="例如：Python项目" maxlength="30">
-        <p id="groupFormError" class="field-error" style="display:none;">保存失败，请重试。</p>
-      </div>
-      <div class="modal-footer" style="justify-content:center;">
-        <button class="btn btn-outline" id="btnGroupCancel">取消</button>
-        <button class="btn btn-solid" id="btnGroupSave">保存</button>
       </div>
     </div>
   </div>
@@ -125,6 +114,6 @@
   </div>
 
   <script src="js/firebase-portfolio.js"></script>
-  <script src="js/category.js"></script>
+  <script src="js/works.js"></script>
 </body>
 </html>

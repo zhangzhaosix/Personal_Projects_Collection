@@ -9,41 +9,68 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="ambient-blob"></div>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Shine</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-item active">首页</a>
+        <a href="works.html" class="nav-item">作品</a>
+        <a href="notes.html" class="nav-item">笔记</a>
+        <a href="#contactSection" class="nav-item">联系</a>
+      </div>
+    </div>
+  </nav>
+
   <div class="home-page">
-    <!-- 头像 -->
-    <div class="avatar-wrapper fade-in">
-      <img src="头像.png" alt="Shine" class="avatar">
-    </div>
+    <!-- Hero 首屏 -->
+    <section class="hero-section fade-in">
+      <img src="头像.png" alt="Shine" class="hero-avatar">
+      <h1 class="hero-name slide-up">Shine</h1>
+      <p class="hero-tagline slide-up" style="animation-delay:0.1s;">
+        项目记录成长 | 笔记沉淀思考——个人作品集
+      </p>
 
-    <!-- 昵称 -->
-    <h1 class="nickname slide-up">Shine</h1>
+      <!-- 打字机轮播 -->
+      <div class="typewriter-wrapper slide-up" style="animation-delay:0.2s;">
+        <span class="typewriter-prefix">🔥</span>
+        <span class="typewriter-text" id="typewriterText"></span>
+        <span class="typewriter-cursor">|</span>
+      </div>
+    </section>
 
-    <!-- 简介 -->
-    <p class="bio slide-up" style="animation-delay:0.1s;">光芒万丈，逐梦前行</p>
-
-    <!-- 打字机轮播 -->
-    <div class="typewriter-wrapper slide-up" style="animation-delay:0.2s;">
-      <span class="typewriter-prefix">🔥</span>
-      <span class="typewriter-text" id="typewriterText"></span>
-      <span class="typewriter-cursor">|</span>
-    </div>
-
-    <!-- 分类卡片 -->
+    <!-- 精选作品 -->
     <div class="featured-section reveal" id="featuredSection">
-      <!-- 鐢?JS 鍔ㄦ€佹覆鏌?-->
-    </div>
-
-    <div class="category-grid" id="categoryGrid">
       <!-- 由 JS 动态渲染 -->
     </div>
 
-    <div class="contact-section reveal" id="contactSection">
-      <!-- 鐢?JS 鍔ㄦ€佹覆鏌?-->
+    <!-- 查看全部作品 -->
+    <div class="home-section reveal" id="worksLinkSection">
+      <div style="text-align:center;">
+        <a href="works.html" class="btn btn-outline">查看全部作品 →</a>
+      </div>
     </div>
 
+    <!-- 最新笔记 -->
+    <div class="home-section reveal" id="notesSection">
+      <!-- 由 JS 动态渲染 -->
+    </div>
+
+    <!-- 查看全部笔记 -->
+    <div class="home-section reveal" id="notesLinkSection">
+      <div style="text-align:center;">
+        <a href="notes.html" class="btn btn-outline">查看全部笔记 →</a>
+      </div>
+    </div>
+
+    <!-- 联系 -->
+    <div class="contact-section reveal" id="contactSection">
+      <!-- 由 JS 动态渲染 -->
+    </div>
+
+    <!-- 页脚 -->
     <div class="footer">
-      <span>© 2026 Shine</span>
+      <span>© 2026 Shine ·项目记录成长 | 笔记沉淀思考</span>
       <span class="visitor-count" id="visitorCount">👥 加载中...</span>
     </div>
   </div>
