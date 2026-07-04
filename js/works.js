@@ -11,15 +11,6 @@ let editingProjectId = null;
 let deleteTargetId = null;
 
 const PAGE_SIZE = 9;
-const WORK_NAMES = [
-  '【抖音 达人种草 数据分析 自动化报表】',
-  '【抖音电商 数据监控 BI看板】',
-  '电商 达人种草 洞察分析 报告',
-  '抖音 电商直播 用户行为 分析',
-  '日常清单网页',
-  '作品集网页',
-  '音乐合集'
-];
 const SESSION_KEY = 'portfolio_admin_auth';
 
 function escapeHtml(value) {
@@ -40,6 +31,25 @@ function generateId() {
 
 function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
+}
+
+function getProjectNoteKey(value) {
+  return `${String(value?.title || value?.name || '').trim()}|${String(value?.url || '').trim()}`;
+}
+
+function collectWorkProjects(data) {
+  if (!data || !Array.isArray(data.categories)) return [];
+  const noteKeys = new Set((Array.isArray(data.notes) ? data.notes : []).map(getProjectNoteKey));
+  const projects = [];
+
+  data.categories.forEach((cat) => {
+    (cat.projects || []).forEach((p) => {
+      if (noteKeys.has(getProjectNoteKey(p))) return;
+      projects.push({ ...p, categoryName: cat.name });
+    });
+  });
+
+  return projects;
 }
 
 function showToast(message, type = 'success', duration = 3000) {
@@ -328,7 +338,7 @@ function renderProjects() {
   const pageProjects = filteredProjects.slice(start, end);
 
   if (!filteredProjects.length) {
-    grid.innerHTML = `<div class="empty-state fade-in"><span class="empty-icon">🔍</span><p>${currentFilter !== '全部' ? '该分类下暂无作品' : '暂无作品，敬请期待'}</p></div>`;
+    grid.innerHTML = '<div class="empty-state fade-in"><span class="empty-icon">🔍</span><p>暂无匹配作品</p></div>';
     return;
   }
 
@@ -428,14 +438,7 @@ async function reloadData() {
   const result = await PortfolioFirebase.loadPortfolioData();
   if (!result.ok) return;
   portfolioData = result.data;
-  allProjects = [];
-  if (Array.isArray(portfolioData.categories)) {
-    portfolioData.categories.forEach((cat) => {
-      (cat.projects || []).forEach((p) => {
-        if (WORK_NAMES.includes(p.name)) allProjects.push({ ...p, categoryName: cat.name });
-      });
-    });
-  }
+  allProjects = collectWorkProjects(portfolioData);
   filteredProjects = [...allProjects];
   currentPage = 1;
   applyFilters();
@@ -458,14 +461,7 @@ async function bootstrapWorks() {
   }
 
   portfolioData = dataResult.data;
-  allProjects = [];
-  if (Array.isArray(portfolioData.categories)) {
-    portfolioData.categories.forEach((cat) => {
-      (cat.projects || []).forEach((p) => {
-        if (WORK_NAMES.includes(p.name)) allProjects.push({ ...p, categoryName: cat.name });
-      });
-    });
-  }
+  allProjects = collectWorkProjects(portfolioData);
   filteredProjects = [...allProjects];
   applyFilters();
   initSearch();
