@@ -347,27 +347,37 @@ function renderProjects() {
   grid.innerHTML = pageProjects.map((project, idx) => {
     const tags = Array.isArray(project.tags) ? project.tags : [];
     const isFeatured = featuredWorks.includes(project.id);
-    const clickAttrs = !isAdminMode && project.url
-      ? `onclick="window.open('${escapeUrl(project.url)}','_blank')" style="cursor:pointer;"`
+    const isLinked = !isAdminMode && project.url;
+    const clickAttrs = isLinked
+      ? `onclick="window.open('${escapeUrl(project.url)}','_blank')"`
       : '';
+    const cardClasses = [
+      'project-card',
+      isFeatured ? 'project-card-featured' : '',
+      isLinked ? 'project-card-clickable' : '',
+      isAdminMode ? 'admin-mode' : '',
+      'reveal',
+      `delay-${Math.min(idx + 1, 6)}`
+    ].filter(Boolean).join(' ');
 
     return `
-      <div class="project-card${isAdminMode ? ' admin-mode' : ''} reveal delay-${Math.min(idx + 1, 6)}" data-project-id="${project.id}" ${clickAttrs}>
-        <div class="card-accent" style="background:linear-gradient(90deg, ${isFeatured ? '#B86B3C' : '#3E6D9C'}, ${isFeatured ? '#B86B3C66' : '#3E6D9C66'});"></div>
+      <div class="${cardClasses}" data-project-id="${project.id}" ${clickAttrs}>
         <div class="card-body">
-          ${isFeatured ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#B86B3C;margin-bottom:6px;">★ 精选作品</span>' : ''}
-          <div class="card-index" style="border:1.5px solid rgba(62,109,156,0.2);color:#3E6D9C;">${String(start + idx + 1).padStart(2, '0')}</div>
+          <div class="project-card-topline">
+            <span class="project-kicker">${escapeHtml(project.categoryName || '作品')}</span>
+            ${isFeatured ? '<span class="project-featured-badge">精选</span>' : ''}
+          </div>
           <div class="project-name">${escapeHtml(project.name)}</div>
           <div class="project-desc">${escapeHtml(project.description || '暂无简介')}</div>
           <div class="project-meta">
-            <div class="tag-list">
+            <div class="tag-list project-tag-list">
               ${tags.length ? tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('') : '<span class="tag-pill tag-empty">暂无标签</span>'}
             </div>
           </div>
         </div>
         ${!isAdminMode && project.url ? `
           <div class="card-footer">
-            <a href="${escapeUrl(project.url)}" target="_blank" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">查看详情 →</a>
+            <a href="${escapeUrl(project.url)}" target="_blank" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">查看作品<span class="project-link-arrow">→</span></a>
           </div>
         ` : ''}
       </div>
