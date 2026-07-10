@@ -83,6 +83,14 @@
             <p class="sidebar-keep-text">把每一次学习与复盘，沉淀为未来的力量。</p>
           </div>
         </div>
+
+        <div class="sidebar-section sidebar-attribution">
+          <h3 class="sidebar-section-title">图标说明</h3>
+          <p class="sidebar-attribution-text">
+            笔记图标已本地化保存，风格参考
+            <a href="https://www.flaticon.com/animated-icons-most-downloaded" target="_blank" rel="noopener">Flaticon Animated Icons</a>。
+          </p>
+        </div>
       </aside>
     </div>
 
@@ -132,7 +140,16 @@
         <label class="field-label" for="inputTags">标签</label>
         <input type="text" class="input-field" id="inputTags" placeholder="用逗号分隔，例如：数据分析, SQL" maxlength="200">
         <label class="field-label" for="inputCategory">分类</label>
-        <input type="text" class="input-field" id="inputCategory" placeholder="分类名称，例如：数据分析" maxlength="50">
+        <input type="text" class="input-field" id="inputCategory" list="noteCategoryOptions" placeholder="分类名称，例如：数据分析" maxlength="50">
+        <datalist id="noteCategoryOptions">
+          <option value="AI学习"></option>
+          <option value="常用文档"></option>
+          <option value="数据分析"></option>
+          <option value="用户行为"></option>
+          <option value="直播"></option>
+          <option value="其他"></option>
+        </datalist>
+        <p class="field-helper">分类会决定默认图标；未命中推荐分类时会自动回退到通用笔记图标。</p>
         <p id="formError" class="field-error" style="display:none;">保存失败，请重试。</p>
       </div>
       <div class="modal-footer">

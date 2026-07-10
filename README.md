@@ -32,6 +32,7 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 - `firestore.rules`：Firestore 规则示例
 - `data.json`：本地示例数据
 - `assets/contact/wechat-qr.jpg`：微信二维码
+- `assets/notes-icons/`：笔记页本地图标资源
 
 ## 技术栈
 
@@ -44,7 +45,7 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 
 - `js/app.js`：首页渲染、精选作品、最新笔记、联系方式、访问量
 - `js/works.js`：作品数据加载、筛选、分页、管理员 CRUD、精选管理
-- `js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理
+- `js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理、分类/标签图标自动匹配
 - `js/firebase-portfolio.js`：Firebase 配置校验、初始化、管理员身份判断、Firestore 读写
 
 ## 本地启动
@@ -74,3 +75,10 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 - 部署时必须保留相对路径结构，至少包含 `index.html`、`css/`、`js/` 和 `assets/`。
 - 如果切换 Firebase 项目，记得同步更新 `js/firebase-portfolio.js` 中的配置。
 - 如果更换线上域名，需要在 Firebase 控制台里更新授权域名。
+
+## 笔记图标维护
+
+- 笔记页图标使用本地 `assets/notes-icons/` 资源，不依赖外链加载。
+- 新增笔记时优先填写推荐分类：`AI学习`、`常用文档`、`数据分析`、`用户行为`、`直播`、`其他`。
+- 前端会按“精选状态 → 分类精确匹配 → 标签关键词匹配 → 默认图标”的顺序自动选择图标。
+- 当前页面中的图标风格参考 Flaticon Animated Icons，署名入口保留在 `notes.html` 侧边栏。

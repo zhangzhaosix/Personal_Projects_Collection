@@ -11,6 +11,28 @@ let deleteTargetId = null;
 
 const PAGE_SIZE = 6;
 const SESSION_KEY = 'portfolio_admin_auth';
+const NOTE_ICON_PATHS = {
+  default: 'assets/notes-icons/note-default.svg',
+  featured: 'assets/notes-icons/note-featured.svg',
+  ai: 'assets/notes-icons/note-ai.svg',
+  docs: 'assets/notes-icons/note-docs.svg',
+  analytics: 'assets/notes-icons/note-analytics.svg',
+  live: 'assets/notes-icons/note-live.svg'
+};
+const CATEGORY_ICON_MAP = {
+  'ai学习': NOTE_ICON_PATHS.ai,
+  'ai学习合集': NOTE_ICON_PATHS.ai,
+  '常用文档': NOTE_ICON_PATHS.docs,
+  '数据分析': NOTE_ICON_PATHS.analytics,
+  '用户行为': NOTE_ICON_PATHS.live,
+  '直播': NOTE_ICON_PATHS.live
+};
+const TAG_ICON_RULES = [
+  { icon: NOTE_ICON_PATHS.analytics, keywords: ['数据分析', 'sql', 'bi', '报表', '分析', '指标', '监控'] },
+  { icon: NOTE_ICON_PATHS.ai, keywords: ['ai', 'agent', '提示词', '模型', '大模型', '自动化'] },
+  { icon: NOTE_ICON_PATHS.docs, keywords: ['文档', '资料', '清单', '模板', '手册'] },
+  { icon: NOTE_ICON_PATHS.live, keywords: ['直播', '用户行为', '复盘', '演示', '转化', '增长'] }
+];
 
 function escapeHtml(value) {
   const div = document.createElement('div');
@@ -24,6 +46,45 @@ function generateId() {
 
 function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
+}
+
+function normalizeMatchValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function renderIconImage(src, className) {
+  return `<img src="${src}" alt="" aria-hidden="true" class="${className}" loading="lazy" decoding="async">`;
+}
+
+function renderEmptyState(message, iconSrc = NOTE_ICON_PATHS.default, actionHtml = '') {
+  return `
+    <div class="empty-state" style="grid-column:1/-1;">
+      <span class="empty-icon">${renderIconImage(iconSrc, 'empty-icon-image')}</span>
+      <p>${escapeHtml(message)}</p>
+      ${actionHtml}
+    </div>
+  `;
+}
+
+function resolveNoteIcon(note, isFeatured) {
+  if (isFeatured) return NOTE_ICON_PATHS.featured;
+
+  const category = normalizeMatchValue(note?.category);
+  if (category && CATEGORY_ICON_MAP[category]) {
+    return CATEGORY_ICON_MAP[category];
+  }
+
+  const tagText = Array.isArray(note?.tags)
+    ? note.tags.map((tag) => normalizeMatchValue(tag)).join(' ')
+    : '';
+
+  for (const rule of TAG_ICON_RULES) {
+    if (rule.keywords.some((keyword) => tagText.includes(normalizeMatchValue(keyword)))) {
+      return rule.icon;
+    }
+  }
+
+  return NOTE_ICON_PATHS.default;
 }
 
 function showToast(message, type = 'success', duration = 3000) {
@@ -185,6 +246,7 @@ function hideFormModal() {
 
 async function saveNote() {
   if (!isSignedInAdmin()) { setFormError('请先登录管理员账号'); return; }
+  const isEditing = Boolean(editingNoteId);
   const title = document.getElementById('inputTitle').value.trim();
   const excerpt = document.getElementById('inputExcerpt').value.trim();
   const url = document.getElementById('inputUrl').value.trim();
@@ -223,7 +285,7 @@ async function saveNote() {
   }
   hideFormModal();
   await reloadData();
-  showToast(editingNoteId ? '笔记已更新' : '笔记已添加');
+  showToast(isEditing ? '笔记已更新' : '笔记已添加');
 }
 
 function confirmDelete(noteId, noteTitle) {
@@ -296,13 +358,15 @@ function renderNotes() {
   const featuredNotes = Array.isArray(portfolioData?.featuredNotes) ? portfolioData.featuredNotes : [];
 
   if (!filtered.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><span class="empty-icon">📝</span><p>${currentFilter !== '全部' ? '该分类下暂无笔记' : '暂无笔记，敬请期待'}</p></div>`;
+    const query = (document.getElementById('notesSearchInput')?.value || '').trim();
+    grid.innerHTML = renderEmptyState(query ? '没有找到匹配的笔记' : '暂无笔记，敬请期待');
     return;
   }
 
   grid.innerHTML = pageNotes.map((note) => {
     const tags = Array.isArray(note.tags) ? note.tags : [];
     const isFeatured = featuredNotes.includes(note.id);
+    const iconSrc = resolveNoteIcon(note, isFeatured);
     const cardActions = isAdminMode ? `
       <div class="note-card-footer" style="border-top:1px solid var(--border-light);padding-top:12px;margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-xs ${isFeatured ? 'btn-solid' : 'btn-outline'}" onclick="window.toggleFeatured('${note.id}', ${isFeatured})">${isFeatured ? '★ 精选' : '☆ 标记'}</button>
@@ -313,7 +377,7 @@ function renderNotes() {
 
     return `
       <div class="note-card">
-        <div class="note-card-icon">${isFeatured ? '🌟' : '📝'}</div>
+        <div class="note-card-icon">${renderIconImage(iconSrc, 'note-card-icon-image')}</div>
         ${isFeatured ? '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-orange-light);color:var(--accent-orange);font-size:11px;font-weight:600;margin-bottom:8px;">精选笔记</span>' : ''}
         <h3 class="note-card-title">${escapeHtml(note.title)}</h3>
         <p class="note-card-excerpt">${escapeHtml(note.excerpt || '')}</p>
@@ -420,17 +484,17 @@ async function reloadData() {
 
 async function bootstrapNotes() {
   const grid = document.getElementById('notesGrid');
-  if (grid) grid.innerHTML = '<div class="empty-state fade-in" style="grid-column:1/-1;"><span class="empty-icon">⏳</span><p>正在加载笔记数据...</p></div>';
+  if (grid) grid.innerHTML = renderEmptyState('正在加载笔记数据...');
 
   const initResult = await PortfolioFirebase.initFirebase();
   if (!initResult.ok) {
-    if (grid) grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><span class="empty-icon">⚠</span><p>${escapeHtml(initResult.error)}</p><button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:16px;">重新加载</button></div>`;
+    if (grid) grid.innerHTML = renderEmptyState(initResult.error || '初始化失败', NOTE_ICON_PATHS.default, '<div class="mt-16"><button class="btn btn-outline btn-sm" onclick="location.reload()">重新加载</button></div>');
     return;
   }
 
   const dataResult = await PortfolioFirebase.loadPortfolioData();
   if (!dataResult.ok) {
-    if (grid) grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><span class="empty-icon">⚠</span><p>${escapeHtml(dataResult.error || '数据加载失败')}</p><button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:16px;">重新加载</button></div>`;
+    if (grid) grid.innerHTML = renderEmptyState(dataResult.error || '数据加载失败', NOTE_ICON_PATHS.default, '<div class="mt-16"><button class="btn btn-outline btn-sm" onclick="location.reload()">重新加载</button></div>');
     return;
   }
 
@@ -438,7 +502,7 @@ async function bootstrapNotes() {
   allNotes = Array.isArray(portfolioData.notes) ? [...portfolioData.notes] : [];
 
   if (!allNotes.length) {
-    if (grid) grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><span class="empty-icon">📝</span><p>暂无笔记，点击右下角 + 添加第一篇笔记吧</p></div>';
+    if (grid) grid.innerHTML = renderEmptyState('暂无笔记，点击右下角 + 添加第一篇笔记吧');
     return;
   }
 
@@ -466,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   bootstrapNotes().catch((error) => {
     const grid = document.getElementById('notesGrid');
-    if (grid) grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><span class="empty-icon">⚠</span><p>页面初始化失败：${error && error.message ? escapeHtml(error.message) : '未知错误'}</p><button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:16px;">重新加载</button></div>`;
+    if (grid) grid.innerHTML = renderEmptyState(`页面初始化失败：${error && error.message ? error.message : '未知错误'}`, NOTE_ICON_PATHS.default, '<div class="mt-16"><button class="btn btn-outline btn-sm" onclick="location.reload()">重新加载</button></div>');
   });
 
   document.getElementById('fabManage')?.addEventListener('click', toggleAdminMode);

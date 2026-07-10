@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="14" width="44" height="36" rx="12" fill="#EFF6FF"/>
+  <rect x="10" y="14" width="44" height="36" rx="12" stroke="#9DB7D3" stroke-width="2"/>
+  <rect x="22" y="24" width="20" height="16" rx="5" fill="#FFFDF8" stroke="#3E6D9C" stroke-width="2"/>
+  <circle cx="28" cy="32" r="2.2" fill="#3E6D9C"/>
+  <circle cx="36" cy="32" r="2.2" fill="#3E6D9C"/>
+  <path d="M16 24V20" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M24 14V10" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M32 14V10" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M40 14V10" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M48 24V20" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M48 44V40" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M16 44V40" stroke="#3E6D9C" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M49.5 12L50.73 14.27L53 15.5L50.73 16.73L49.5 19L48.27 16.73L46 15.5L48.27 14.27L49.5 12Z" fill="#B86B3C"/>
+</svg>
