@@ -154,7 +154,7 @@ function enterAdminMode() {
   if (!isSignedInAdmin()) { showLoginModal(); return; }
   isAdminMode = true;
   setManageButtonState();
-  renderAdminExtra();
+  renderProjects();
 }
 
 function exitAdminMode() {
@@ -162,9 +162,7 @@ function exitAdminMode() {
   sessionStorage.removeItem(SESSION_KEY);
   PortfolioFirebase.signOutAdmin();
   setManageButtonState();
-  document.querySelectorAll('.project-card.admin-mode').forEach(el => el.classList.remove('admin-mode'));
-  document.querySelectorAll('.project-actions').forEach(el => el.remove());
-  document.querySelectorAll('.featured-toggle').forEach(el => el.remove());
+  renderProjects();
 }
 
 function toggleAdminMode() {
@@ -319,10 +317,13 @@ function renderAdminExtra() {
     const isFeatured = Array.isArray(portfolioData.featuredWorks) && portfolioData.featuredWorks.includes(pid);
     const actions = document.createElement('div');
     actions.className = 'project-actions';
+    actions.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
     actions.innerHTML = `
-      <button class="btn btn-sm ${isFeatured ? 'btn-solid' : 'btn-outline'}" onclick="window.toggleFeatured('${pid}', ${isFeatured})">${isFeatured ? '★ 精选' : '☆ 标记精选'}</button>
-      <button class="btn btn-outline btn-sm" onclick="window.editProject('${pid}')">✏ 编辑</button>
-      <button class="btn btn-danger btn-sm" onclick="window.confirmDelete('${pid}','${escapeHtml(project.name).replace(/'/g, "\\'")}')">🗑 删除</button>
+      <button type="button" class="btn btn-sm ${isFeatured ? 'btn-solid' : 'btn-outline'}" onclick="event.stopPropagation(); window.toggleFeatured('${pid}', ${isFeatured})">${isFeatured ? '★ 精选' : '☆ 标记精选'}</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.editProject('${pid}')">✏ 编辑</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation(); window.confirmDelete('${pid}','${escapeHtml(project.name).replace(/'/g, "\\'")}')">🗑 删除</button>
     `;
     card.appendChild(actions);
   });
