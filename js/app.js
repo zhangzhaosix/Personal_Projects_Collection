@@ -125,15 +125,20 @@ function escapeUrl(value) {
 }
 
 function renderHomeError(message) {
-  const grid = document.getElementById('categoryGrid');
-  if (!grid) return;
-
   const featured = document.getElementById('featuredSection');
+  const worksLink = document.getElementById('worksLinkSection');
+  const notes = document.getElementById('notesSection');
+  const notesLink = document.getElementById('notesLinkSection');
   const contact = document.getElementById('contactSection');
-  if (featured) featured.style.display = 'none';
+  if (!featured) return;
+
+  featured.style.display = '';
+  if (worksLink) worksLink.style.display = 'none';
+  if (notes) notes.style.display = 'none';
+  if (notesLink) notesLink.style.display = 'none';
   if (contact) contact.style.display = 'none';
 
-  grid.innerHTML = `
+  featured.innerHTML = `
     <div class="empty-state home-error reveal visible">
       <span class="empty-icon">⚠</span>
       <p>${escapeHtml(message)}</p>
