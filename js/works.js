@@ -457,7 +457,7 @@ async function reloadData() {
 
 async function bootstrapWorks() {
   const grid = document.getElementById('worksGrid');
-  if (grid) grid.innerHTML = '<div class="empty-state fade-in"><span class="empty-icon">⏳</span><p>正在加载作品数据...</p></div>';
+  if (grid) grid.innerHTML = '<div class="empty-state fade-in"><span class="empty-icon" aria-hidden="true"><svg class="works-loading-icon" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="8" width="22" height="20" rx="6" stroke="var(--border-color)" stroke-width="1.8"/><path d="M12 14h12M12 19h8M12 24h6" stroke="var(--accent-blue)" stroke-width="1.8"/><path d="M25 21v5M22.5 23.5h5" stroke="var(--accent-orange)" stroke-width="1.8"/></svg></span><p>正在加载作品数据...</p></div>';
 
   const initResult = await PortfolioFirebase.initFirebase();
   if (!initResult.ok) {

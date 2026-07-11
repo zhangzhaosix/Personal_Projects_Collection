@@ -378,7 +378,7 @@ function renderNotes() {
     return `
       <div class="note-card">
         <div class="note-card-icon">${renderIconImage(iconSrc, 'note-card-icon-image')}</div>
-        ${isFeatured ? '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-orange-light);color:var(--accent-orange);font-size:11px;font-weight:600;margin-bottom:8px;">精选笔记</span>' : ''}
+        ${isFeatured ? '<span class="note-card-featured-label">精选笔记</span>' : ''}
         <h3 class="note-card-title">${escapeHtml(note.title)}</h3>
         <p class="note-card-excerpt">${escapeHtml(note.excerpt || '')}</p>
         <div class="note-card-tags">${tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>
