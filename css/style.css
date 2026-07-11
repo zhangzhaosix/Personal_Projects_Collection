@@ -526,6 +526,7 @@ textarea.input-field {
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   font-size: 14px;
+  font-family: inherit;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -543,10 +544,15 @@ textarea.input-field {
   color: #FFFFFF;
 }
 
-.page-btn.disabled {
+.page-btn:disabled {
   opacity: 0.4;
   cursor: default;
   pointer-events: none;
+}
+
+.page-btn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
 }
 
 .page-ellipsis {
@@ -776,6 +782,7 @@ textarea.input-field {
 }
 
 .note-preview-card {
+  display: block;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -783,11 +790,17 @@ textarea.input-field {
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   cursor: pointer;
+  text-decoration: none;
 }
 
 .note-preview-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-hover);
+}
+
+.note-preview-card:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
 }
 
 .note-preview-card {
@@ -976,6 +989,17 @@ textarea.input-field {
   align-items: center;
   gap: 4px;
   border-top: 1px solid var(--border-light);
+}
+
+.footer-attribution,
+.footer-attribution a {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.footer-attribution a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .visitor-count {
@@ -1406,22 +1430,15 @@ textarea.input-field {
 
 /* 笔记页面布局 */
 .notes-layout {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 0 var(--space-xl) var(--space-2xl);
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: var(--space-2xl);
-  align-items: start;
 }
 
 .notes-main {
+  max-width: 100%;
+  margin: 0 auto;
   min-width: 0;
-}
-
-.notes-sidebar {
-  position: sticky;
-  top: 80px;
 }
 
 /* 精选笔记 */
@@ -1498,11 +1515,16 @@ textarea.input-field {
 /* 笔记网格 */
 .notes-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-lg);
 }
 
 .note-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 292px;
+  min-width: 0;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -1569,7 +1591,10 @@ textarea.input-field {
 .note-card-tags {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
+  max-height: 56px;
+  overflow: hidden;
   margin-bottom: var(--space-sm);
 }
 
@@ -1577,6 +1602,7 @@ textarea.input-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: auto;
   font-size: 12px;
   color: var(--text-tertiary);
   padding-top: var(--space-sm);
@@ -1598,113 +1624,6 @@ textarea.input-field {
 
 .note-card:hover .note-card-read::after {
   transform: translateX(3px);
-}
-
-/* 右侧栏 */
-.sidebar-section {
-  margin-bottom: var(--space-xl);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.sidebar-section-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: var(--space-md);
-  letter-spacing: 0.5px;
-}
-
-/* 热门标签 */
-.sidebar-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.sidebar-tag {
-  display: inline-flex;
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
-  background: var(--tag-bg);
-  color: var(--tag-text);
-  font-size: 12px;
-  font-weight: 500;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.sidebar-tag:hover {
-  background: var(--accent-blue);
-  color: #fff;
-}
-
-/* 推荐阅读 */
-.sidebar-reading-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.sidebar-reading-item {
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--border-light);
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  cursor: pointer;
-  transition: color var(--transition-fast);
-}
-
-.sidebar-reading-item:last-child {
-  border-bottom: none;
-}
-
-.sidebar-reading-item:hover {
-  color: var(--accent-blue);
-}
-
-.sidebar-reading-item .reading-count {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  display: block;
-  margin-top: 2px;
-}
-
-/* 持续记录卡片 */
-.sidebar-keep-card {
-  background: linear-gradient(135deg, #F2EDE4 0%, #F8F3EA 100%);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
-  text-align: center;
-}
-
-.sidebar-keep-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
-}
-
-.sidebar-keep-text {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.sidebar-attribution-text {
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--text-secondary);
-}
-
-.sidebar-attribution-text a {
-  color: var(--accent-blue);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 /* ============================================
@@ -2094,14 +2013,6 @@ textarea.input-field {
    响应式
    ============================================ */
 @media (max-width: 1024px) {
-  .notes-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .notes-sidebar {
-    position: static;
-  }
-
   .featured-note {
     grid-template-columns: 1fr;
   }
@@ -2260,7 +2171,6 @@ textarea.input-field {
 
   .notes-layout {
     padding: 0 var(--space-md) var(--space-xl);
-    gap: var(--space-lg);
   }
 
   .featured-note-body {
@@ -2269,10 +2179,6 @@ textarea.input-field {
 
   .note-card {
     padding: var(--space-md);
-  }
-
-  .notes-sidebar {
-    display: none;
   }
 
   .fab {

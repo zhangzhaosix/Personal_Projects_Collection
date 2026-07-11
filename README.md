@@ -12,7 +12,7 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 
 ## 项目概览
 
-- 首页展示个人信息、精选作品、最新笔记和联系方式
+- 首页展示个人信息、精选作品、最近标记的 3 条精选笔记和联系方式
 - 作品页支持分页、搜索、管理员增删改和精选标记
 - 笔记页支持分页、搜索、管理员增删改和精选标记
 - 联系页集中展示邮箱和微信联系方式
@@ -43,7 +43,7 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 
 ## 核心模块职责
 
-- `js/app.js`：首页渲染、精选作品、最新笔记、联系方式、访问量
+- `js/app.js`：首页渲染、精选作品、推荐笔记、联系方式、访问量
 - `js/works.js`：作品数据加载、筛选、分页、管理员 CRUD、精选管理
 - `js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理、分类/标签图标自动匹配
 - `js/firebase-portfolio.js`：Firebase 配置校验、初始化、管理员身份判断、Firestore 读写
@@ -81,4 +81,4 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 - 笔记页图标使用本地 `assets/notes-icons/` 资源，不依赖外链加载。
 - 新增笔记时优先填写推荐分类：`AI学习`、`常用文档`、`数据分析`、`用户行为`、`直播`、`其他`。
 - 前端会按“精选状态 → 分类精确匹配 → 标签关键词匹配 → 默认图标”的顺序自动选择图标。
-- 当前页面中的图标风格参考 Flaticon Animated Icons，署名入口保留在 `notes.html` 侧边栏。
+- 当前页面中的图标风格参考 Flaticon Animated Icons，本地图标资源保留在 `assets/notes-icons/`，署名入口位于 `notes.html` 页脚。

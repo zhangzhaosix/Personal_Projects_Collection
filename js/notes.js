@@ -383,7 +383,7 @@ function renderNotes() {
         <p class="note-card-excerpt">${escapeHtml(note.excerpt || '')}</p>
         <div class="note-card-tags">${tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>
         <div class="note-card-footer">
-          <span>${escapeHtml(note.date || '')} · ${escapeHtml(note.readTime || '5 分钟阅读')}</span>
+          <span>${escapeHtml(note.date || '')}</span>
           ${note.url ? `<a href="${escapeHtml(note.url)}" target="_blank" rel="noopener" class="note-card-read" onclick="event.stopPropagation();">阅读全文</a>` : '<span class="note-card-read">阅读全文</span>'}
         </div>
         ${cardActions}
@@ -399,25 +399,27 @@ function renderPagination() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   if (totalPages <= 1) { container.innerHTML = ''; return; }
 
-  let html = `<span class="page-btn${currentPage === 1 ? ' disabled' : ''}" data-page="${currentPage - 1}">← 上一页</span>`;
+  let html = `<button type="button" class="page-btn" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''}>← 上一页</button>`;
   const maxVisible = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
   let endPage = Math.min(totalPages, startPage + maxVisible - 1);
   if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
 
   if (startPage > 1) {
-    html += `<span class="page-btn" data-page="1">1</span>`;
+    html += '<button type="button" class="page-btn" data-page="1">1</button>';
     if (startPage > 2) html += `<span class="page-ellipsis">...</span>`;
   }
-  for (let i = startPage; i <= endPage; i++) html += `<span class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</span>`;
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button type="button" class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}"${i === currentPage ? ' aria-current="page"' : ''}>${i}</button>`;
+  }
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) html += `<span class="page-ellipsis">...</span>`;
-    html += `<span class="page-btn" data-page="${totalPages}">${totalPages}</span>`;
+    html += `<button type="button" class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
   }
-  html += `<span class="page-btn${currentPage === totalPages ? ' disabled' : ''}" data-page="${currentPage + 1}">下一页 →</span>`;
+  html += `<button type="button" class="page-btn" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''}>下一页 →</button>`;
   container.innerHTML = html;
 
-  container.querySelectorAll('.page-btn:not(.disabled)').forEach((btn) => {
+  container.querySelectorAll('.page-btn:not(:disabled)').forEach((btn) => {
     btn.addEventListener('click', () => {
       const page = parseInt(btn.dataset.page, 10);
       if (page >= 1 && page <= totalPages) {
@@ -427,26 +429,6 @@ function renderPagination() {
       }
     });
   });
-}
-
-function renderSidebar() {
-  const tagContainer = document.querySelector('#sidebarTags .sidebar-tags');
-  if (tagContainer) {
-    const tagCounts = {};
-    allNotes.forEach((note) => { (note.tags || []).forEach((tag) => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; }); });
-    const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([tag]) => tag);
-    tagContainer.innerHTML = sortedTags.length
-      ? sortedTags.map((tag) => `<span class="sidebar-tag">${escapeHtml(tag)}</span>`).join('')
-      : '<span class="sidebar-tag" style="background:transparent;color:var(--text-tertiary);cursor:default;">暂无标签</span>';
-  }
-
-  const readingContainer = document.querySelector('#sidebarReading .sidebar-reading-list');
-  if (readingContainer) {
-    const top4 = [...allNotes].slice(0, 4);
-    readingContainer.innerHTML = top4.length
-      ? top4.map((note) => `<div class="sidebar-reading-item"><span>${escapeHtml(note.title)}</span><span class="reading-count">${escapeHtml(note.readTime || '5 分钟阅读')}</span></div>`).join('')
-      : '<div class="sidebar-reading-item" style="color:var(--text-tertiary);cursor:default;">暂无推荐</div>';
-  }
 }
 
 function renderAll() {
@@ -478,7 +460,6 @@ async function reloadData() {
   portfolioData = result.data;
   allNotes = Array.isArray(portfolioData.notes) ? [...portfolioData.notes] : [];
   currentPage = 1;
-  renderSidebar();
   renderAll();
 }
 
@@ -506,7 +487,6 @@ async function bootstrapNotes() {
     return;
   }
 
-  renderSidebar();
   renderAll();
   initSearch();
 

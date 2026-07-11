@@ -221,53 +221,35 @@ function renderNotesSection() {
 
   const featuredIds = Array.isArray(portfolioData.featuredNotes) ? portfolioData.featuredNotes : [];
   const allNotes = Array.isArray(portfolioData.notes) ? portfolioData.notes : [];
-  let notes = featuredIds.length
-    ? allNotes.filter((n) => featuredIds.includes(n.id))
-    : allNotes.slice(0, 3);
+  const notesById = new Map(allNotes.map((note) => [note.id, note]));
+  const previewNotes = [...featuredIds]
+    .reverse()
+    .map((id) => notesById.get(id))
+    .filter(Boolean)
+    .slice(0, 3);
 
-  // Fallback: no notes yet, show projects not in work list
-  if (!notes.length && Array.isArray(portfolioData.categories)) {
-    const fallbackNotes = [];
-    for (const category of portfolioData.categories) {
-      if (!Array.isArray(category.projects)) continue;
-      for (const project of category.projects) {
-        if (fallbackNotes.length >= 3) break;
-        if (!WORK_NAMES_FALLBACK.includes(project.name)) {
-          const tags = Array.isArray(project.tags) ? project.tags : [];
-          fallbackNotes.push({
-            title: project.name,
-            excerpt: project.description || '',
-            tags,
-            date: project.createdAt || ''
-          });
-        }
-      }
-      if (fallbackNotes.length >= 3) break;
-    }
-    notes = fallbackNotes;
-  }
-
-  if (!notes.length) {
+  if (!previewNotes.length) {
     el.style.display = 'none';
     return;
   }
 
-  const previewNotes = notes.slice(0, 3);
   el.style.display = '';
   el.innerHTML = `
     <div class="section-header">
-      <h2 class="section-title">最新笔记</h2>
+      <h2 class="section-title">推荐笔记</h2>
     </div>
     <div class="notes-preview-grid">
       ${previewNotes.map(note => {
         const tags = Array.isArray(note.tags) ? note.tags : [];
+        const noteHref = note.url ? escapeUrl(note.url) : 'notes.html';
+        const noteTarget = note.url ? ' target="_blank" rel="noopener"' : '';
         return `
-          <div class="note-preview-card">
+          <a class="note-preview-card" href="${escapeHtml(noteHref)}"${noteTarget}>
             <span class="note-preview-tag">${escapeHtml(tags.length > 0 ? tags[0] : '笔记')}</span>
             <h3 class="note-preview-title">${escapeHtml(note.title)}</h3>
             <p class="note-preview-excerpt">${escapeHtml(note.excerpt || '')}</p>
             <span class="note-preview-meta">${escapeHtml(note.date || '')}</span>
-          </div>
+          </a>
         `;
       }).join('')}
     </div>
