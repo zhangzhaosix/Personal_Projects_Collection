@@ -4,10 +4,8 @@
 
 ## 在线访问
 
-部署后可通过以下地址访问：
-
 ```text
-https://zhangzhaosix.github.io/Personal_Projects_Collection
+https://shine-works-xi.vercel.app/
 ```
 
 ## 项目概览
@@ -20,65 +18,91 @@ https://zhangzhaosix.github.io/Personal_Projects_Collection
 
 ## 目录结构
 
-- `index.html`：首页入口
-- `works.html`：作品页
-- `notes.html`：笔记页
-- `contact.html`：联系方式页
-- `css/style.css`：全站样式
-- `js/app.js`：首页逻辑
-- `js/works.js`：作品页逻辑
-- `js/notes.js`：笔记页逻辑
-- `js/firebase-portfolio.js`：Firebase 初始化、数据规范化、管理员登录和读写封装
-- `firestore.rules`：Firestore 规则示例
-- `data.json`：本地示例数据
-- `assets/contact/wechat-qr.jpg`：微信二维码
-- `assets/notes-icons/`：笔记页本地图标资源
+```text
+.
+├─ AGENTS.md              # 项目级协作规则
+├─ README.md              # 项目说明
+├─ vercel.json            # Vercel 发布目录配置
+├─ code/                  # 可运行的站点代码
+│  ├─ index.html          # 首页入口
+│  ├─ works.html          # 作品页
+│  ├─ notes.html          # 笔记页
+│  ├─ category.html       # 作品分类页
+│  ├─ contact.html        # 联系方式页
+│  ├─ css/                # 全站样式
+│  ├─ js/                 # 页面逻辑与 Firebase 封装
+│  ├─ assets/             # 图片和图标资源
+│  ├─ tests/              # 自动化测试
+│  ├─ data.json           # 本地示例数据
+│  └─ firestore.rules     # Firestore 规则示例
+└─ docs/                  # 历史方案、演示图片和归档资料
+```
 
 ## 技术栈
 
 - HTML + CSS + JavaScript
 - Firebase Auth + Firestore
-- Google Fonts：Archivo、Space Grotesk
-- 纯静态站点，无打包构建流程
+- Google Fonts：Inter、Noto Sans SC
+- 纯静态站点，无依赖安装和打包步骤
 
 ## 核心模块职责
 
-- `js/app.js`：首页渲染、精选作品、推荐笔记、联系方式、访问量
-- `js/works.js`：作品数据加载、筛选、分页、管理员 CRUD、精选管理
-- `js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理、分类/标签图标自动匹配
-- `js/firebase-portfolio.js`：Firebase 配置校验、初始化、管理员身份判断、Firestore 读写
+- `code/js/app.js`：首页渲染、精选作品、推荐笔记、联系方式和访问量
+- `code/js/works.js`：作品数据加载、筛选、分页、管理员 CRUD 和精选管理
+- `code/js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理和图标匹配
+- `code/js/category.js`：作品分类页展示和管理
+- `code/js/firebase-portfolio.js`：Firebase 配置校验、初始化、管理员身份判断和 Firestore 读写
 
 ## 本地启动
 
-- 直接双击打开 `index.html` 即可预览。
-- 如果浏览器对本地文件限制较多，可以用任意静态服务器打开项目根目录，例如 VS Code Live Server 或 `python -m http.server`。
-- 本项目无需安装依赖，也没有额外构建步骤。
+直接打开 `code/index.html` 可以进行基础预览。推荐在项目根目录运行静态服务器：
+
+```bash
+python -m http.server 8000 --directory code
+```
+
+随后访问：
+
+```text
+http://localhost:8000/
+```
+
+项目无需安装依赖，也没有构建步骤。
+
+## 自动化测试
+
+在项目根目录运行：
+
+```bash
+node --test code/tests/notes-display.test.cjs
+```
 
 ## 环境变量 / 配置
 
 - 当前项目没有本地环境变量。
-- Firebase 配置直接写在 `js/firebase-portfolio.js` 的 `FIREBASE_CONFIG` 中。
-- 管理员邮箱写在同文件的 `ADMIN_EMAIL` 中。
-- 修改 Firebase 信息后，要同步检查 Firebase Auth、Firestore 规则和授权域名配置。
+- Firebase 配置位于 `code/js/firebase-portfolio.js` 的 `FIREBASE_CONFIG`。
+- 管理员邮箱位于同一文件的 `ADMIN_EMAIL`。
+- 修改 Firebase 信息后，需要同步检查 Firebase Auth、Firestore 规则和授权域名配置。
 
 ## 常见问题
 
-- 页面提示 `Firebase 配置缺失`：先补全 `js/firebase-portfolio.js` 里的 `FIREBASE_CONFIG`。
-- 管理员登录失败：确认 Firebase 已开启 Email/Password 登录，并且 `ADMIN_EMAIL` 与 Firebase 中的管理员邮箱一致。
-- 页面没有数据：先用管理员账号登录一次，让程序初始化 Firestore 文档。
-- 访问量数字不更新：本地预览时会退回到浏览器本地缓存，线上部署后才会调用远程计数接口。
-- 图片或字体加载失败：检查网络是否能访问外部资源。
+- 页面提示 `Firebase 配置缺失`：补全 `code/js/firebase-portfolio.js` 中的 `FIREBASE_CONFIG`。
+- 管理员登录失败：确认 Firebase 已启用 Email/Password 登录，并且 `ADMIN_EMAIL` 与管理员邮箱一致。
+- 页面没有数据：使用管理员账号登录一次，让程序初始化 Firestore 文档。
+- 访问量不更新：本地预览会退回浏览器本地缓存，线上部署后才会调用远程计数接口。
+- 图片或字体加载失败：检查资源相对路径及外部网络连接。
 
 ## 部署注意事项
 
-- 推荐直接部署仓库根目录到 GitHub Pages 或其他静态托管平台。
-- 部署时必须保留相对路径结构，至少包含 `index.html`、`css/`、`js/` 和 `assets/`。
-- 如果切换 Firebase 项目，记得同步更新 `js/firebase-portfolio.js` 中的配置。
-- 如果更换线上域名，需要在 Firebase 控制台里更新授权域名。
+- Vercel 通过根目录的 `vercel.json` 将 `code/` 设为发布目录。
+- Vercel 项目仍以仓库根目录作为 Root Directory，无需改为 `code/`。
+- 部署内容必须保留 `code/index.html`、`code/css/`、`code/js/` 和 `code/assets/` 的相对结构。
+- 如果以后重新启用 GitHub Pages，需要增加发布 `code/` 的 GitHub Actions 工作流；GitHub Pages 不能直接把任意 `code/` 目录作为分支发布源。
+- 更换 Firebase 项目或线上域名后，需要同步更新 Firebase 配置和授权域名。
 
 ## 笔记图标维护
 
-- 笔记页图标使用本地 `assets/notes-icons/` 资源，不依赖外链加载。
-- 新增笔记时优先填写推荐分类：`AI学习`、`常用文档`、`数据分析`、`用户行为`、`直播`、`其他`。
-- 前端会按“精选状态 → 分类精确匹配 → 标签关键词匹配 → 默认图标”的顺序自动选择图标。
-- 当前页面中的图标风格参考 Flaticon Animated Icons，本地图标资源保留在 `assets/notes-icons/`，署名入口位于 `notes.html` 页脚。
+- 笔记页图标位于 `code/assets/notes-icons/`，不依赖外链加载。
+- 新增笔记时优先使用分类：`AI学习`、`常用文档`、`数据分析`、`用户行为`、`直播`、`其他`。
+- 前端按照“精选状态 → 分类精确匹配 → 标签关键词匹配 → 默认图标”选择图标。
+- 图标风格参考 Flaticon Animated Icons，署名入口位于 `code/notes.html` 页脚。
