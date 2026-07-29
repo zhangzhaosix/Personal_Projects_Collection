@@ -104,18 +104,19 @@ function testStableNoteCardLayout() {
   assert.match(footer, /margin-top:\s*auto/);
 }
 
-function testPaginationAndAttributionMarkup() {
+function testPaginationAndFooterMarkup() {
   const notesSource = fs.readFileSync(path.join(root, 'js', 'notes.js'), 'utf8');
   const notesHtml = fs.readFileSync(path.join(root, 'notes.html'), 'utf8');
 
   assert.match(notesSource, /<button type="button" class="page-btn/);
   assert.match(notesSource, /aria-current="page"/);
   assert.match(notesSource, /\.page-btn:not\(:disabled\)/);
-  assert.match(notesHtml, /flaticon\.com\/animated-icons-most-downloaded/);
+  assert.match(notesHtml, /© 2026 Shine/);
+  assert.doesNotMatch(notesHtml, /footer-attribution|Flaticon|flaticon\.com/i);
 }
 
 testRecentFeaturedNotes();
 testEmptyFeaturedNotes();
 testStableNoteCardLayout();
-testPaginationAndAttributionMarkup();
+testPaginationAndFooterMarkup();
 console.log('notes display regression tests passed');

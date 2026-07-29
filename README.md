@@ -105,4 +105,3 @@ node --test code/tests/notes-display.test.cjs
 - 笔记页图标位于 `code/assets/notes-icons/`，不依赖外链加载。
 - 新增笔记时优先使用分类：`AI学习`、`常用文档`、`数据分析`、`用户行为`、`直播`、`其他`。
 - 前端按照“精选状态 → 分类精确匹配 → 标签关键词匹配 → 默认图标”选择图标。
-- 图标风格参考 Flaticon Animated Icons，署名入口位于 `code/notes.html` 页脚。
