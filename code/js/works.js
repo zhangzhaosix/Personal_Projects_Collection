@@ -12,6 +12,7 @@ let deleteTargetId = null;
 
 const PAGE_SIZE = 9;
 const SESSION_KEY = 'portfolio_admin_auth';
+const CUSTOM_CATEGORY_VALUE = '__custom__';
 
 function escapeHtml(value) {
   const div = document.createElement('div');
@@ -25,8 +26,8 @@ function escapeUrl(value) {
   return `https://${value}`;
 }
 
-function generateId() {
-  return `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+function generateId(prefix = 'p') {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function cloneData(data) {
@@ -45,7 +46,7 @@ function collectWorkProjects(data) {
   data.categories.forEach((cat) => {
     (cat.projects || []).forEach((p) => {
       if (noteKeys.has(getProjectNoteKey(p))) return;
-      projects.push({ ...p, categoryName: cat.name });
+      projects.push({ ...p, categoryId: cat.id, categoryName: cat.name });
     });
   });
 
@@ -179,11 +180,110 @@ function setFormError(message) {
   el.style.display = message ? 'block' : 'none';
 }
 
+function setCustomProjectTypeVisible(visible) {
+  const field = document.getElementById('customProjectTypeField');
+  const input = document.getElementById('inputCustomProjectType');
+  if (!field || !input) return;
+  field.hidden = !visible;
+  input.disabled = !visible;
+  if (!visible) input.value = '';
+}
+
+function renderProjectTypeOptions(selectedCategoryId = '') {
+  const select = document.getElementById('selectProjectType');
+  if (!select) return;
+
+  select.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '请选择项目类型';
+  select.appendChild(placeholder);
+
+  (portfolioData?.categories || [])
+    .filter((category) => category.id !== 'ai-learning')
+    .forEach((category) => {
+      const option = document.createElement('option');
+      option.value = category.id;
+      option.textContent = category.name;
+      select.appendChild(option);
+    });
+
+  const customOption = document.createElement('option');
+  customOption.value = CUSTOM_CATEGORY_VALUE;
+  customOption.textContent = '自定义项目类型';
+  select.appendChild(customOption);
+  select.value = selectedCategoryId;
+  setCustomProjectTypeVisible(false);
+}
+
+function normalizeCategoryKey(value) {
+  return String(value || '').trim().toLocaleLowerCase();
+}
+
+function resolveTargetCategory(data, selectedCategoryId, customCategoryName) {
+  if (!data || !Array.isArray(data.categories)) {
+    return { ok: false, error: '分类数据异常，请刷新后重试。' };
+  }
+
+  if (selectedCategoryId === CUSTOM_CATEGORY_VALUE) {
+    const name = String(customCategoryName || '').trim();
+    if (!name) return { ok: false, error: '请输入自定义项目类型。', fieldId: 'inputCustomProjectType' };
+    if (name.length > 30) return { ok: false, error: '自定义项目类型不能超过 30 个字符。', fieldId: 'inputCustomProjectType' };
+
+    const existingCategory = data.categories.find((category) => normalizeCategoryKey(category.name) === normalizeCategoryKey(name));
+    if (existingCategory) return { ok: true, category: existingCategory };
+
+    const category = { id: generateId('c'), name, groups: [], projects: [] };
+    data.categories.push(category);
+    return { ok: true, category };
+  }
+
+  if (!selectedCategoryId) {
+    return { ok: false, error: '请选择项目类型。', fieldId: 'selectProjectType' };
+  }
+
+  const category = data.categories.find((item) => item.id === selectedCategoryId);
+  return category
+    ? { ok: true, category }
+    : { ok: false, error: '所选项目类型不存在，请刷新后重试。', fieldId: 'selectProjectType' };
+}
+
+function upsertProjectInCategory(data, projectId, targetCategory, values) {
+  if (!projectId) {
+    targetCategory.projects.push({
+      id: generateId(),
+      ...values,
+      status: '待补充',
+      createdAt: new Date().toISOString().slice(0, 10)
+    });
+    return { ok: true };
+  }
+
+  for (const sourceCategory of data.categories) {
+    const sourceIndex = (sourceCategory.projects || []).findIndex((project) => project.id === projectId);
+    if (sourceIndex === -1) continue;
+
+    const originalProject = sourceCategory.projects[sourceIndex];
+    const updatedProject = { ...originalProject, ...values };
+    if (sourceCategory.id === targetCategory.id) {
+      sourceCategory.projects[sourceIndex] = updatedProject;
+    } else {
+      sourceCategory.projects.splice(sourceIndex, 1);
+      updatedProject.groupId = null;
+      targetCategory.projects.push(updatedProject);
+    }
+    return { ok: true };
+  }
+
+  return { ok: false, error: '未找到要编辑的作品，请刷新后重试。' };
+}
+
 function showFormModal(project) {
   editingProjectId = project ? project.id : null;
   setFormError('');
   document.getElementById('formModalTitle').textContent = project ? '编辑作品' : '添加作品';
   document.getElementById('inputName').value = project ? project.name : '';
+  renderProjectTypeOptions(project ? project.categoryId : '');
   document.getElementById('inputUrl').value = project ? (project.url || '') : '';
   document.getElementById('inputDesc').value = project ? (project.description || '') : '';
   document.getElementById('inputTags').value = project && Array.isArray(project.tags) ? project.tags.join(', ') : '';
@@ -203,24 +303,31 @@ async function saveProject() {
   const url = document.getElementById('inputUrl').value.trim();
   const description = document.getElementById('inputDesc').value.trim();
   const rawTags = document.getElementById('inputTags').value.trim();
+  const selectedCategoryId = document.getElementById('selectProjectType').value;
+  const customCategoryName = document.getElementById('inputCustomProjectType').value;
   const tags = rawTags ? rawTags.split(/[,，\n]+/).map(t => t.trim()).filter(Boolean) : [];
   if (!name) { setFormError('作品名称不能为空'); document.getElementById('inputName').focus(); return; }
 
   const previousData = cloneData(portfolioData);
-  const firstCat = portfolioData.categories[0];
-  if (!firstCat) { setFormError('数据异常'); return; }
+  const targetResult = resolveTargetCategory(portfolioData, selectedCategoryId, customCategoryName);
+  if (!targetResult.ok) {
+    portfolioData = previousData;
+    setFormError(targetResult.error);
+    document.getElementById(targetResult.fieldId || 'selectProjectType')?.focus();
+    return;
+  }
 
-  if (editingProjectId) {
-    // Find project across categories
-    for (const cat of portfolioData.categories) {
-      const idx = (cat.projects || []).findIndex(p => p.id === editingProjectId);
-      if (idx !== -1) {
-        cat.projects[idx] = { ...cat.projects[idx], name, url, description, tags };
-        break;
-      }
-    }
-  } else {
-    firstCat.projects.push({ id: generateId(), name, url, description, tags, status: '待补充', createdAt: new Date().toISOString().slice(0, 10) });
+  const wasEditing = Boolean(editingProjectId);
+  const updateResult = upsertProjectInCategory(
+    portfolioData,
+    editingProjectId,
+    targetResult.category,
+    { name, url, description, tags }
+  );
+  if (!updateResult.ok) {
+    portfolioData = previousData;
+    setFormError(updateResult.error);
+    return;
   }
 
   const saveResult = await PortfolioFirebase.savePortfolioData(portfolioData);
@@ -232,7 +339,7 @@ async function saveProject() {
   }
   hideFormModal();
   await reloadData();
-  showToast(editingProjectId ? '作品已更新' : '作品已添加');
+  showToast(wasEditing ? '作品已更新' : '作品已添加');
 }
 
 function confirmDelete(projectId, projectName) {
@@ -512,6 +619,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnFormSave')?.addEventListener('click', saveProject);
   document.getElementById('btnFormCancel')?.addEventListener('click', hideFormModal);
+  document.getElementById('selectProjectType')?.addEventListener('change', (event) => {
+    const isCustom = event.target.value === CUSTOM_CATEGORY_VALUE;
+    setCustomProjectTypeVisible(isCustom);
+    if (isCustom) setTimeout(() => document.getElementById('inputCustomProjectType')?.focus(), 0);
+  });
   document.getElementById('formModal')?.addEventListener('click', function(e) { if (e.target === this) hideFormModal(); });
 
   document.getElementById('btnConfirmDelete')?.addEventListener('click', executeDelete);

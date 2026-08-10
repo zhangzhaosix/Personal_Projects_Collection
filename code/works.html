@@ -87,13 +87,21 @@
       <div class="modal-body">
         <label class="field-label" for="inputName">作品名称</label>
         <input type="text" class="input-field" id="inputName" placeholder="作品名称" maxlength="50">
+        <label class="field-label" for="selectProjectType">项目类型（必选）</label>
+        <select class="input-field" id="selectProjectType" required>
+          <option value="">请选择项目类型</option>
+        </select>
+        <div id="customProjectTypeField" hidden>
+          <label class="field-label" for="inputCustomProjectType">自定义项目类型</label>
+          <input type="text" class="input-field" id="inputCustomProjectType" placeholder="例如：Vibe Coding 项目" maxlength="30" disabled>
+        </div>
         <label class="field-label" for="inputUrl">作品网址</label>
         <input type="text" class="input-field" id="inputUrl" placeholder="作品网址（可选）" maxlength="500">
         <label class="field-label" for="inputDesc">作品简介</label>
         <textarea class="input-field" id="inputDesc" placeholder="作品简介" maxlength="200" rows="3"></textarea>
         <label class="field-label" for="inputTags">标签</label>
         <input type="text" class="input-field" id="inputTags" placeholder="用逗号分隔，例如：数据分析, BI" maxlength="200">
-        <p id="formError" class="field-error" style="display:none;">保存失败，请重试。</p>
+        <p id="formError" class="field-error" role="alert" style="display:none;">保存失败，请重试。</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" id="btnFormCancel">取消</button>

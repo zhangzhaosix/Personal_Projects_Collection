@@ -166,10 +166,12 @@
 
   function normalizePortfolioData(data) {
     const source = data && typeof data === 'object' ? data : {};
-    const categories = DEFAULT_DATA.categories.map((defaultCategory) => {
-      const sourceCategory = Array.isArray(source.categories)
-        ? source.categories.find((category) => category && category.id === defaultCategory.id)
-        : null;
+    const sourceCategories = Array.isArray(source.categories)
+      ? source.categories.filter((category) => category && typeof category === 'object')
+      : [];
+
+    const categories = sourceCategories.map((sourceCategory) => {
+      const defaultCategory = DEFAULT_DATA.categories.find((category) => category.id === sourceCategory.id);
 
       const groups = Array.isArray(sourceCategory?.groups)
         ? sourceCategory.groups.map(g => ({
@@ -183,11 +185,22 @@
         : [];
 
       return {
-        id: defaultCategory.id,
-        name: sourceCategory?.name || defaultCategory.name,
+        id: String(sourceCategory.id || generateId('c')),
+        name: String(sourceCategory.name || defaultCategory?.name || '未命名分类').trim(),
         groups,
         projects
       };
+    });
+
+    const existingCategoryIds = new Set(categories.map((category) => category.id));
+    DEFAULT_DATA.categories.forEach((defaultCategory) => {
+      if (existingCategoryIds.has(defaultCategory.id)) return;
+      categories.push({
+        id: defaultCategory.id,
+        name: defaultCategory.name,
+        groups: [],
+        projects: []
+      });
     });
 
     return {
