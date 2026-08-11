@@ -11,6 +11,7 @@ https://shine-works-xi.vercel.app/
 ## 项目概览
 
 - 首页展示个人信息、精选作品、最近标记的 3 条精选笔记和联系方式
+- 首页访问用户数仅对管理员显示，按浏览器/设备去重统计
 - 作品页支持分页、搜索、管理员增删改、项目类型选择/自定义和精选标记
 - 笔记页支持分页、搜索、管理员增删改和精选标记
 - 联系页集中展示邮箱和微信联系方式
@@ -75,6 +76,8 @@ http://localhost:8000/
 
 ```bash
 node --test code/tests/notes-display.test.cjs
+node code/tests/visitor-counter.test.cjs
+node code/tests/works-category.test.cjs
 ```
 
 ## 环境变量 / 配置
@@ -82,6 +85,7 @@ node --test code/tests/notes-display.test.cjs
 - 当前项目没有本地环境变量。
 - Firebase 配置位于 `code/js/firebase-portfolio.js` 的 `FIREBASE_CONFIG`。
 - 管理员邮箱位于同一文件的 `ADMIN_EMAIL`。
+- 访客记录位于 Firestore 的 `visitorStats/site/visitors` 集合，统计结果仅管理员可读。
 - 修改 Firebase 信息后，需要同步检查 Firebase Auth、Firestore 规则和授权域名配置。
 
 ## 常见问题
@@ -89,7 +93,8 @@ node --test code/tests/notes-display.test.cjs
 - 页面提示 `Firebase 配置缺失`：补全 `code/js/firebase-portfolio.js` 中的 `FIREBASE_CONFIG`。
 - 管理员登录失败：确认 Firebase 已启用 Email/Password 登录，并且 `ADMIN_EMAIL` 与管理员邮箱一致。
 - 页面没有数据：使用管理员账号登录一次，让程序初始化 Firestore 文档。
-- 访问量不更新：本地预览会退回浏览器本地缓存，线上部署后才会调用远程计数接口。
+- 访问用户数不更新：确认已通过静态服务器访问，并已将 `code/firestore.rules` 发布到当前 Firebase 项目；直接打开 `file:` 页面不会执行远程计数。
+- 访问用户数只在管理员登录后显示；普通访客不会读取统计总数。
 - 图片或字体加载失败：检查资源相对路径及外部网络连接。
 
 ## 部署注意事项
@@ -97,6 +102,7 @@ node --test code/tests/notes-display.test.cjs
 - Vercel 通过根目录的 `vercel.json` 将 `code/` 设为发布目录。
 - Vercel 项目仍以仓库根目录作为 Root Directory，无需改为 `code/`。
 - 部署内容必须保留 `code/index.html`、`code/css/`、`code/js/` 和 `code/assets/` 的相对结构。
+- 发布新版本前，需要同步发布 `code/firestore.rules`，否则匿名访客记录和管理员统计查询会被拒绝。
 - 如果以后重新启用 GitHub Pages，需要增加发布 `code/` 的 GitHub Actions 工作流；GitHub Pages 不能直接把任意 `code/` 目录作为分支发布源。
 - 更换 Firebase 项目或线上域名后，需要同步更新 Firebase 配置和授权域名。
 

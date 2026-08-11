@@ -72,44 +72,132 @@ function initTypewriter() {
   setTimeout(tick, 600);
 }
 
+const VISITOR_ID_KEY = 'portfolio-visitor-id';
+const VISITOR_CREATED_AT_KEY = 'portfolio-visitor-created-at';
+const VISITOR_RECORDED_KEY = 'portfolio-visitor-recorded';
+
+function readVisitorStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeVisitorStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // 隐私模式或浏览器禁用存储时，访客仍可正常浏览页面。
+  }
+}
+
+function createVisitorId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function getVisitorIdentity() {
+  let visitorId = readVisitorStorage(VISITOR_ID_KEY);
+  if (!visitorId) {
+    visitorId = createVisitorId();
+    writeVisitorStorage(VISITOR_ID_KEY, visitorId);
+  }
+
+  let createdAt = Number(readVisitorStorage(VISITOR_CREATED_AT_KEY));
+  if (!Number.isSafeInteger(createdAt)) {
+    createdAt = Date.now();
+    writeVisitorStorage(VISITOR_CREATED_AT_KEY, String(createdAt));
+  }
+
+  return {
+    visitorId,
+    createdAt,
+    isRecorded: readVisitorStorage(VISITOR_RECORDED_KEY) === '1'
+  };
+}
+
+function trackCurrentVisitor() {
+  const portfolioFirebase = globalThis.PortfolioFirebase;
+  const identity = getVisitorIdentity();
+
+  if (identity.isRecorded) {
+    return Promise.resolve({ ok: true, skipped: true });
+  }
+
+  if (!portfolioFirebase || typeof portfolioFirebase.recordVisitor !== 'function') {
+    return Promise.resolve({ ok: false, error: '访客统计接口不可用。' });
+  }
+
+  return Promise.resolve(portfolioFirebase.recordVisitor(identity.visitorId, identity.createdAt))
+    .then((result) => {
+      if (result && result.ok) {
+        writeVisitorStorage(VISITOR_RECORDED_KEY, '1');
+      }
+      return result;
+    })
+    .catch((error) => ({
+      ok: false,
+      error: error && error.message ? error.message : '访客记录失败。'
+    }));
+}
+
 function initVisitorCounter() {
   const el = document.getElementById('visitorCount');
   if (!el) return;
 
-  const isNewVisitor = !localStorage.getItem('portfolio-visited');
-  const apiKey = 'portfolio-unique-visitors';
-  const useRemoteCounter = location.protocol !== 'file:';
+  const portfolioFirebase = globalThis.PortfolioFirebase;
+  const hideCount = () => {
+    el.hidden = true;
+    if (typeof el.setAttribute === 'function') el.setAttribute('aria-hidden', 'true');
+    el.textContent = '';
+  };
 
-  function displayCount(count) {
-    el.textContent = `👥 访问用户数: ${count.toLocaleString()}`;
-  }
+  hideCount();
 
-  if (!useRemoteCounter) {
-    const localCount = parseInt(localStorage.getItem(apiKey) || '1', 10);
-    displayCount(localCount);
+  // 直接打开 file: 只做基础预览，不发起远程访客统计请求。
+  if (
+    location.protocol === 'file:' ||
+    !portfolioFirebase ||
+    typeof portfolioFirebase.onAuthChange !== 'function'
+  ) {
     return;
   }
 
-  if (isNewVisitor) {
-    localStorage.setItem('portfolio-visited', '1');
-    fetch(`https://api.countapi.xyz/hit/zhangzhaosix/${apiKey}`)
-      .then((res) => res.json())
-      .then((data) => displayCount(data.value))
+  const visitorRecordPromise = trackCurrentVisitor();
+  let requestId = 0;
+
+  portfolioFirebase.onAuthChange((user) => {
+    if (!portfolioFirebase.isAdminUser(user)) {
+      requestId += 1;
+      hideCount();
+      return;
+    }
+
+    const currentRequestId = ++requestId;
+    el.hidden = false;
+    if (typeof el.setAttribute === 'function') el.setAttribute('aria-hidden', 'false');
+    el.textContent = '👥 访问用户数: 加载中...';
+
+    visitorRecordPromise
+      .then(() => portfolioFirebase.getVisitorCount(user))
+      .then((result) => {
+        if (currentRequestId !== requestId || !portfolioFirebase.isAdminUser(user)) return;
+
+        const count = Number(result && result.count);
+        el.textContent = result && result.ok && Number.isFinite(count)
+          ? `👥 访问用户数: ${count.toLocaleString()}`
+          : '👥 访问用户数: 暂不可用';
+      })
       .catch(() => {
-        const fallbackCount = parseInt(localStorage.getItem(apiKey) || '0', 10) + 1;
-        localStorage.setItem(apiKey, String(fallbackCount));
-        displayCount(fallbackCount);
+        if (currentRequestId === requestId) {
+          el.textContent = '👥 访问用户数: 暂不可用';
+        }
       });
-    return;
-  }
-
-  fetch(`https://api.countapi.xyz/get/zhangzhaosix/${apiKey}`)
-    .then((res) => res.json())
-    .then((data) => displayCount(data.value))
-    .catch(() => {
-      const fallbackCount = parseInt(localStorage.getItem(apiKey) || '1', 10);
-      displayCount(fallbackCount);
-    });
+  });
 }
 
 function escapeHtml(value) {

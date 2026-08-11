@@ -10,6 +10,7 @@
 
   const PROJECT_STATUSES = ['已完成', '进行中', '迭代中', '待补充'];
   const PORTFOLIO_DOC_PATH = ['portfolio', 'site'];
+  const VISITOR_COLLECTION_PATH = ['visitorStats', 'site', 'visitors'];
 
   const DEFAULT_DATA = {
     categories: [
@@ -115,6 +116,7 @@
   let auth = null;
   let db = null;
   let initResult = null;
+  let initPromise = null;
   let authListenersBound = false;
 
   function clone(value) {
@@ -236,9 +238,11 @@
           signInWithEmailAndPassword: authModule.signInWithEmailAndPassword,
           signOut: authModule.signOut,
           getFirestore: firestoreModule.getFirestore,
+          collection: firestoreModule.collection,
           doc: firestoreModule.doc,
           getDoc: firestoreModule.getDoc,
-          setDoc: firestoreModule.setDoc
+          setDoc: firestoreModule.setDoc,
+          getCountFromServer: firestoreModule.getCountFromServer
         };
 
         return modulesCache;
@@ -253,38 +257,46 @@
       return initResult;
     }
 
-    if (!isFirebaseConfigured()) {
-      initResult = {
-        ok: false,
-        error: 'Firebase 配置缺失，请先补全 js/firebase-portfolio.js 中的 FIREBASE_CONFIG。'
-      };
-      return initResult;
+    if (initPromise) {
+      return initPromise;
     }
 
-    try {
-      const modules = await loadModules();
-      firebaseApp = modules.initializeApp(FIREBASE_CONFIG);
-      auth = modules.getAuth(firebaseApp);
-      db = modules.getFirestore(firebaseApp);
-
-      if (modules.setPersistence && modules.browserLocalPersistence) {
-        modules.setPersistence(auth, modules.browserLocalPersistence).catch(() => {});
+    initPromise = (async () => {
+      if (!isFirebaseConfigured()) {
+        initResult = {
+          ok: false,
+          error: 'Firebase 配置缺失，请先补全 js/firebase-portfolio.js 中的 FIREBASE_CONFIG。'
+        };
+        return initResult;
       }
 
-      initResult = {
-        ok: true,
-        auth,
-        db,
-        modules
-      };
-      return initResult;
-    } catch (error) {
-      initResult = {
-        ok: false,
-        error: `Firebase 初始化失败：${error && error.message ? error.message : '未知错误'}`
-      };
-      return initResult;
-    }
+      try {
+        const modules = await loadModules();
+        firebaseApp = modules.initializeApp(FIREBASE_CONFIG);
+        auth = modules.getAuth(firebaseApp);
+        db = modules.getFirestore(firebaseApp);
+
+        if (modules.setPersistence && modules.browserLocalPersistence) {
+          modules.setPersistence(auth, modules.browserLocalPersistence).catch(() => {});
+        }
+
+        initResult = {
+          ok: true,
+          auth,
+          db,
+          modules
+        };
+        return initResult;
+      } catch (error) {
+        initResult = {
+          ok: false,
+          error: `Firebase 初始化失败：${error && error.message ? error.message : '未知错误'}`
+        };
+        return initResult;
+      }
+    })();
+
+    return initPromise;
   }
 
   function getAuthReady() {
@@ -298,6 +310,74 @@
   function getPortfolioDocRef() {
     if (!db || !modulesCache) return null;
     return modulesCache.doc(db, PORTFOLIO_DOC_PATH[0], PORTFOLIO_DOC_PATH[1]);
+  }
+
+  function getVisitorDocRef(visitorId) {
+    if (!db || !modulesCache || typeof modulesCache.doc !== 'function') return null;
+    return modulesCache.doc(db, ...VISITOR_COLLECTION_PATH, visitorId);
+  }
+
+  function getVisitorCollectionRef() {
+    if (!db || !modulesCache || typeof modulesCache.collection !== 'function') return null;
+    return modulesCache.collection(db, ...VISITOR_COLLECTION_PATH);
+  }
+
+  function isValidVisitorId(visitorId) {
+    return typeof visitorId === 'string' && /^[A-Za-z0-9_-]{8,128}$/.test(visitorId);
+  }
+
+  async function recordVisitor(visitorId, createdAt) {
+    const context = await initFirebase();
+    if (!context.ok || !db) {
+      return context;
+    }
+
+    if (!isValidVisitorId(visitorId)) {
+      return { ok: false, error: '访客标识无效。' };
+    }
+
+    const ref = getVisitorDocRef(visitorId);
+    const normalizedCreatedAt = Number.isSafeInteger(Number(createdAt))
+      ? Number(createdAt)
+      : Date.now();
+
+    try {
+      // 同一 visitorId 使用同一 createdAt 重复写入时，规则会允许幂等更新。
+      await context.modules.setDoc(ref, { createdAt: normalizedCreatedAt });
+      return { ok: true };
+    } catch (error) {
+      return {
+        ok: false,
+        error: `记录访客失败：${error && error.message ? error.message : '未知错误'}`
+      };
+    }
+  }
+
+  async function getVisitorCount(user) {
+    const context = await initFirebase();
+    if (!context.ok || !db) {
+      return context;
+    }
+
+    const currentUser = user || (auth && auth.currentUser);
+    if (!isAdminUser(currentUser)) {
+      return { ok: false, error: '只有管理员可以读取访客统计。' };
+    }
+
+    const visitorCollection = getVisitorCollectionRef();
+    if (!visitorCollection || typeof context.modules.getCountFromServer !== 'function') {
+      return { ok: false, error: 'Firebase 访客统计模块不可用。' };
+    }
+
+    try {
+      const snapshot = await context.modules.getCountFromServer(visitorCollection);
+      return { ok: true, count: snapshot.data().count };
+    } catch (error) {
+      return {
+        ok: false,
+        error: `读取访客统计失败：${error && error.message ? error.message : '未知错误'}`
+      };
+    }
   }
 
   async function ensureAdminSeed() {
@@ -440,6 +520,8 @@
     ensureAdminSeed,
     loadPortfolioData,
     savePortfolioData,
+    recordVisitor,
+    getVisitorCount,
     signInAdmin,
     signOutAdmin,
     onAuthChange,
