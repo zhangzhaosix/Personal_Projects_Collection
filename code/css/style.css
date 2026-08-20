@@ -2479,3 +2479,122 @@ textarea.input-field {
     padding: 18px;
   }
 }
+
+/* 作品页项目证据卡片：仅作用于 works.html */
+.works-page .project-card {
+  min-height: 500px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: 0 1px 0 rgba(43, 43, 43, 0.02);
+}
+
+.works-page .project-card:hover {
+  box-shadow: 0 6px 8px rgba(43, 43, 43, 0.045);
+}
+
+.works-page .card-body {
+  padding: 28px 28px 22px;
+}
+
+.works-page .project-name {
+  font-size: 21px;
+  line-height: 1.42;
+  margin-bottom: 12px;
+}
+
+.works-page .project-desc {
+  font-size: 15px;
+  line-height: 1.72;
+  -webkit-line-clamp: 5;
+}
+
+.works-page .project-evidence {
+  width: 100%;
+  margin: 24px 0 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.works-page .project-evidence-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.works-page .project-evidence dt,
+.works-page .project-evidence dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.works-page .project-evidence dt {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.works-page .project-evidence dd {
+  color: var(--text-primary);
+}
+
+.works-page .project-evidence-empty {
+  color: var(--text-tertiary) !important;
+}
+
+.works-page .project-meta {
+  padding-top: 22px;
+}
+
+.works-page .card-footer {
+  padding: 0 28px 28px;
+}
+
+.works-page .project-link-btn {
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.works-page .project-link-btn:hover {
+  color: var(--accent-blue-hover);
+}
+
+.works-page .project-link-btn-disabled {
+  color: var(--text-tertiary);
+  cursor: default;
+}
+
+.project-form-modal .modal-box {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  .works-page .project-card {
+    min-height: 0;
+  }
+
+  .works-page .card-body {
+    padding: 22px 20px 18px;
+  }
+
+  .works-page .project-name {
+    font-size: 19px;
+  }
+
+  .works-page .project-desc {
+    font-size: 14px;
+  }
+
+  .works-page .project-evidence-row {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 10px;
+    padding: 11px 0;
+  }
+
+  .works-page .card-footer {
+    padding: 0 20px 22px;
+  }
+}

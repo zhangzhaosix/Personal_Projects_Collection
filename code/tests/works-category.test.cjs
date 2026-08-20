@@ -34,6 +34,9 @@ function loadWorksHarness(saveResult = { ok: true }) {
     inputName: createElement('更新后的作品'),
     inputUrl: createElement('https://example.com'),
     inputDesc: createElement('更新后的简介'),
+    inputRole: createElement('数据分析与看板搭建'),
+    inputTools: createElement('SQL, Power BI'),
+    inputOutcome: createElement('完成监控看板并支持复盘'),
     inputTags: createElement('Agent, 测试'),
     selectProjectType: createElement('agent'),
     inputCustomProjectType: createElement(''),
@@ -201,4 +204,23 @@ test('Firestore 保存失败时恢复移动前数据', async () => {
   assert.equal(restored.categories[0].projects[0].groupId, 'g_1');
   assert.equal(restored.categories[1].projects.length, 0);
   assert.equal(elements.formError.textContent, '模拟保存失败');
+});
+
+test('管理员保存作品时保留职责、工具和产出字段', async () => {
+  const { helpers } = loadWorksHarness();
+  const data = {
+    categories: [
+      { id: 'agent', name: 'Agent项目', groups: [], projects: [{ id: 'p_1', name: '原作品' }] }
+    ],
+    featuredWorks: []
+  };
+  helpers.setPortfolioData(data);
+  helpers.setEditingProjectId('p_1');
+
+  await helpers.saveProject();
+
+  const saved = helpers.getPortfolioData().categories[0].projects[0];
+  assert.equal(saved.role, '数据分析与看板搭建');
+  assert.equal(saved.tools, 'SQL, Power BI');
+  assert.equal(saved.outcome, '完成监控看板并支持复盘');
 });

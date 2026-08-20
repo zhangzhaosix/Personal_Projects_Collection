@@ -81,7 +81,7 @@
   </div>
 
   <!-- 添加/编辑作品模态框 -->
-  <div class="modal-overlay" id="formModal">
+  <div class="modal-overlay project-form-modal" id="formModal">
     <div class="modal-box">
       <div class="modal-title" id="formModalTitle">添加作品</div>
       <div class="modal-body">
@@ -99,6 +99,12 @@
         <input type="text" class="input-field" id="inputUrl" placeholder="作品网址（可选）" maxlength="500">
         <label class="field-label" for="inputDesc">作品简介</label>
         <textarea class="input-field" id="inputDesc" placeholder="作品简介" maxlength="200" rows="3"></textarea>
+        <label class="field-label" for="inputRole">职责</label>
+        <textarea class="input-field" id="inputRole" placeholder="你在项目中的具体职责，例如：指标体系梳理与看板搭建" maxlength="180" rows="2"></textarea>
+        <label class="field-label" for="inputTools">工具 / 方法</label>
+        <textarea class="input-field" id="inputTools" placeholder="使用的工具或分析方法，例如：SQL · Power BI · 漏斗分析" maxlength="180" rows="2"></textarea>
+        <label class="field-label" for="inputOutcome">产出</label>
+        <textarea class="input-field" id="inputOutcome" placeholder="可核实的产出或决策支持，例如：完成复盘报告，支持投放策略优化" maxlength="220" rows="2"></textarea>
         <label class="field-label" for="inputTags">标签</label>
         <input type="text" class="input-field" id="inputTags" placeholder="用逗号分隔，例如：数据分析, BI" maxlength="200">
         <p id="formError" class="field-error" role="alert" style="display:none;">保存失败，请重试。</p>

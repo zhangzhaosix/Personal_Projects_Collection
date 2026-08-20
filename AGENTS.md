@@ -65,8 +65,6 @@
 必须等待用户确认后再继续。
 
 ## 4. 工具职责
-- Superpowers：负责需求分析、任务拆分、技术方案、TDD、调试和 Code Review，禁止直接编码。
-- ui-ux-pro-max：负责 UI 设计、页面结构和视觉规范。涉及前端页面时，必须先设计再开发。
 - Impeccable：负责 UI 质量审查。核心页面必须执行 `/impeccable audit` 和 `/impeccable polish`。
 - Codex：负责功能开发和缺陷修复。要求小步迭代，持续保持项目可运行。
 - Chrome DevTools MCP：负责自动化测试和功能验收。必须验证页面可访问、核心流程正常、Console 无报错。

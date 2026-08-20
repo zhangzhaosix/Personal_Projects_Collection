@@ -48,7 +48,7 @@
           {
             id: 'p_1780843960501_2nmq',
             name: '抖音 电商直播 用户行为 分析',
-            url: 'https://vcnnr111xqu6.feishu.cn/mindnotes/ZVrMbJCjxmKnMFnzIqKc5aENnLg?from=space_personal_filelist&pre_pathname=%2Fdrive%2Ffolder%2FLVtAfvzIRlltYtduWWvcDkWNnNf&previous_navigation_time=1780843871378&disposable_login_token=eyJ1c2VyX2lkIjoiNzQ5NjEyNzc2MTcyODUwMzgzNiIsImRldmljZV9sb2dpbl9pZCI6Ijc1MzIzOTc3NTgxNjgxNTQxMTMiLCJ0aW1lc3RhbXAiOjE3ODA4NDM4NzEsInVuaXQiOiJldV9uYyIsInB3ZF9sZXNzX2xvZ2luX2F1dGgiOiIxIiwidmVyc2lvbiI6InYzIiwidGVuYW50X2JyYW5kIjoiZmVpc2h1IiwicGtnX2JyYW5kIjoi6aOe5LmmIiwiY2xpZW50X3NjaGV',
+            url: 'https://vcnnr111xqu6.feishu.cn/mindnotes/ZVrMbJCjxmKnMFnzIqKc5aENnLg',
             description: '基于用户体验对用户动作进行了详细的拆解，通过优化用户观看体验、提升互动率为核心抓手，驱动直播GMV增长',
             createdAt: '2026-06-07',
             tags: ['用户行为', '直播'],
@@ -72,7 +72,7 @@
           {
             id: 'p_1780815955322_a4sh',
             name: '音乐合集',
-            url: 'http://127.0.0.1:5000/',
+            url: '',
             description: '记录我爱听的歌曲',
             createdAt: '2026-06-07',
             tags: ['音乐', '收藏'],
@@ -145,6 +145,9 @@
       name: String(source.name || '').trim(),
       url: String(source.url || '').trim(),
       description: String(source.description || '').trim(),
+      role: String(source.role || '').trim(),
+      tools: String(source.tools || '').trim(),
+      outcome: String(source.outcome || '').trim(),
       createdAt: source.createdAt || '',
       tags: normalizeTags(source.tags),
       status,
