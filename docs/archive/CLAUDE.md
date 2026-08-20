@@ -8,23 +8,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 技能分工
 
-### 网页开发 → superpowers 系列 skills
-
-承担 **产品经理 + 测试开发 + 调试** 职责：
-
-- 先调用 `superpowers:brainstorming` 确认需求和设计方案
-- 开发过程遵循 `superpowers:test-driven-development` 或 `superpowers:executing-plans` / `superpowers:writing-plans`
-- 完成后调用 `superpowers:requesting-code-reviewing` 或 `superpowers:requesting-code-review` 做代码审查
-- 修复问题使用 `superpowers:systematic-debugging`
-
-### 网页美化 → ui-ux-pro-max skill
-
-承担 **UI 设计 + 页面美化 + 前端设计** 职责：
-
-- 布局、配色、字体、动效等视觉相关全部交由 `ui-ux-pro-max` 处理
-- 涉及风格选择（毛玻璃、极简、Bento Grid 等）时优先调用此 skill
-- 支持 responsive 适配、暗色模式、无障碍等前端设计决策
-
 ### UI 设计监督 → impeccable skill
 
 承担 **UI 设计监督 + AI 味检查 + 设计质量把关** 职责：

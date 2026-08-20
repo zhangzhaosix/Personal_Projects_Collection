@@ -21,9 +21,26 @@ function escapeHtml(value) {
 }
 
 function escapeUrl(value) {
-  if (!value) return '#';
-  if (value.startsWith('http://') || value.startsWith('https://')) return value;
-  return `https://${value}`;
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  if (/^https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?::|\/|$)/i.test(candidate)) return '';
+
+  try {
+    if (typeof URL === 'function') {
+      const url = new URL(candidate);
+      if (!['http:', 'https:'].includes(url.protocol)) return '';
+      if (/(?:^|\.)local$/i.test(url.hostname)) return '';
+      ['token', 'access_token', 'auth_token', 'disposable_login_token', 'api_key', 'password'].forEach((key) => {
+        url.searchParams.delete(key);
+      });
+      return url.toString();
+    }
+  } catch (error) {
+    return '';
+  }
+
+  return candidate;
 }
 
 function generateId(prefix = 'p') {
@@ -286,6 +303,9 @@ function showFormModal(project) {
   renderProjectTypeOptions(project ? project.categoryId : '');
   document.getElementById('inputUrl').value = project ? (project.url || '') : '';
   document.getElementById('inputDesc').value = project ? (project.description || '') : '';
+  document.getElementById('inputRole').value = project ? (project.role || '') : '';
+  document.getElementById('inputTools').value = project ? (project.tools || '') : '';
+  document.getElementById('inputOutcome').value = project ? (project.outcome || '') : '';
   document.getElementById('inputTags').value = project && Array.isArray(project.tags) ? project.tags.join(', ') : '';
   document.getElementById('formModal').classList.add('active');
   setTimeout(() => document.getElementById('inputName').focus(), 100);
@@ -302,6 +322,9 @@ async function saveProject() {
   const name = document.getElementById('inputName').value.trim();
   const url = document.getElementById('inputUrl').value.trim();
   const description = document.getElementById('inputDesc').value.trim();
+  const role = document.getElementById('inputRole').value.trim();
+  const tools = document.getElementById('inputTools').value.trim();
+  const outcome = document.getElementById('inputOutcome').value.trim();
   const rawTags = document.getElementById('inputTags').value.trim();
   const selectedCategoryId = document.getElementById('selectProjectType').value;
   const customCategoryName = document.getElementById('inputCustomProjectType').value;
@@ -322,7 +345,7 @@ async function saveProject() {
     portfolioData,
     editingProjectId,
     targetResult.category,
-    { name, url, description, tags }
+    { name, url, description, role, tools, outcome, tags }
   );
   if (!updateResult.ok) {
     portfolioData = previousData;
@@ -401,7 +424,8 @@ function applyFilters() {
     if (query) {
       const name = (p.name || '').toLowerCase();
       const desc = (p.description || '').toLowerCase();
-      if (!name.includes(query) && !desc.includes(query)) return false;
+      const evidence = [p.role, p.tools, p.outcome].filter(Boolean).join(' ').toLowerCase();
+      if (!name.includes(query) && !desc.includes(query) && !evidence.includes(query)) return false;
     }
     return true;
   });
@@ -455,21 +479,17 @@ function renderProjects() {
   grid.innerHTML = pageProjects.map((project, idx) => {
     const tags = Array.isArray(project.tags) ? project.tags : [];
     const isFeatured = featuredWorks.includes(project.id);
-    const isLinked = !isAdminMode && project.url;
-    const clickAttrs = isLinked
-      ? `onclick="window.open('${escapeUrl(project.url)}','_blank')"`
-      : '';
+    const safeUrl = escapeUrl(project.url);
     const cardClasses = [
       'project-card',
       isFeatured ? 'project-card-featured' : '',
-      isLinked ? 'project-card-clickable' : '',
       isAdminMode ? 'admin-mode' : '',
       'reveal',
       `delay-${Math.min(idx + 1, 6)}`
     ].filter(Boolean).join(' ');
 
     return `
-      <div class="${cardClasses}" data-project-id="${project.id}" ${clickAttrs}>
+      <div class="${cardClasses}" data-project-id="${project.id}">
         <div class="card-body">
           <div class="project-card-topline">
             <span class="project-kicker">${escapeHtml(project.categoryName || '作品')}</span>
@@ -477,15 +497,31 @@ function renderProjects() {
           </div>
           <div class="project-name">${escapeHtml(project.name)}</div>
           <div class="project-desc">${escapeHtml(project.description || '暂无简介')}</div>
+          <dl class="project-evidence" aria-label="项目证据">
+            <div class="project-evidence-row">
+              <dt>职责</dt>
+              <dd class="${project.role ? '' : 'project-evidence-empty'}">${escapeHtml(project.role || '待补充')}</dd>
+            </div>
+            <div class="project-evidence-row">
+              <dt>工具 / 方法</dt>
+              <dd class="${project.tools ? '' : 'project-evidence-empty'}">${escapeHtml(project.tools || '待补充')}</dd>
+            </div>
+            <div class="project-evidence-row">
+              <dt>产出</dt>
+              <dd class="${project.outcome ? '' : 'project-evidence-empty'}">${escapeHtml(project.outcome || '待补充')}</dd>
+            </div>
+          </dl>
           <div class="project-meta">
             <div class="tag-list project-tag-list">
               ${tags.length ? tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('') : '<span class="tag-pill tag-empty">暂无标签</span>'}
             </div>
           </div>
         </div>
-        ${!isAdminMode && project.url ? `
+        ${!isAdminMode ? `
           <div class="card-footer">
-            <a href="${escapeUrl(project.url)}" target="_blank" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">查看作品<span class="project-link-arrow">→</span></a>
+            ${safeUrl
+              ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">查看作品<span class="project-link-arrow">→</span></a>`
+              : '<span class="project-link-btn project-link-btn-disabled" aria-disabled="true">暂无公开链接</span>'}
           </div>
         ` : ''}
       </div>
