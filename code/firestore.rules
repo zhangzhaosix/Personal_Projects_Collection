@@ -7,23 +7,10 @@ service cloud.firestore {
         && request.auth.token.email == '1801327763@qq.com';
     }
 
-    function canWriteVisitorRecord() {
-      return request.auth == null || isAdmin();
-    }
-
     match /portfolio/site {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /visitorStats/site/visitors/{visitorId} {
-      allow read: if isAdmin();
-      allow create: if canWriteVisitorRecord()
-        && request.resource.data.keys().hasOnly(['createdAt'])
-        && request.resource.data.createdAt is int;
-      allow update: if canWriteVisitorRecord()
-        && request.resource.data == resource.data;
-      allow delete: if false;
-    }
   }
 }

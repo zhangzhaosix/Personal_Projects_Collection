@@ -1,0 +1,249 @@
+{
+  "version": "initial-20261025",
+  "publishedAt": "2026-10-25T04:12:55.000Z",
+  "data": {
+    "categories": [
+      {
+        "id": "data-analysis",
+        "name": "数据分析项目",
+        "groups": [],
+        "projects": [
+          {
+            "id": "p_1780814882051_z593",
+            "name": "电商数据治理与报表搭建",
+            "url": "https://vcnnr111xqu6.feishu.cn/sheets/Tc2psCbP0hnjAOtWFrjc5wzNnTd?from=from_copylink",
+            "description": "处理达人与视频多源数据，聚合 21 天数据并筛选 198 条有效达人种草数据；通过数据复盘筛选 12 位高转化优质达人，为达人建联与投放优化提供决策支撑。",
+            "role": "负责达人种草数据清洗、整合及复盘报表搭建",
+            "tools": "Excel飞书、XLOOKUP、数据清洗、指标分析",
+            "outcome": "完成种草报表，筛选 12 位优质达人，建立达人矩阵",
+            "createdAt": "2026-06-07",
+            "tags": [
+              "数据治理",
+              "报表搭建",
+              "归因分析"
+            ],
+            "status": "已完成",
+            "groupId": null
+          },
+          {
+            "id": "p_1780841238422_ic9b",
+            "name": "电商种草数据监控与归因分析",
+            "url": "https://vcnnr111xqu6.feishu.cn/docx/NqNhdQzscoLOYIxxRDYcvrJRnkf?from=from_copylink",
+            "description": "围绕声量曝光、成交转化、人群资产搭建分层监控看板，统一转化成本等核心指标口径，支持多维对标和投放策略复盘。",
+            "role": "负责抖音种草数据监控 BI 看板搭建及指标体系设计",
+            "tools": "SQL、BI 看板、指标体系、多维分析",
+            "outcome": "完成种草监控看板，筛选 15 位 S 级达人，平均转化率 0.26%+",
+            "createdAt": "2026-06-07",
+            "tags": [
+              "BI",
+              "数据监控",
+              "归因分析"
+            ],
+            "status": "已完成",
+            "groupId": null
+          },
+          {
+            "id": "p_1780841697010_p9ip",
+            "name": "抖音电商达人效能评估与投放策略优化",
+            "url": "https://vcnnr111xqu6.feishu.cn/docx/KahrdlXaiozctcxg6H6ciBlanee",
+            "description": "承接骆驼户外 447.5 万元抖音种草投放，对标三大竞品，完成达人分层、竞品对标与赛道归因；识别 34% 低效投放达人资源，输出投放策略复盘报告。",
+            "role": "负责达人种草复盘分析、竞品对标及内容/达人下钻分析",
+            "tools": "飞书、指标分析、竞品对标、多维下钻",
+            "outcome": "沉淀内容与达人投放策略，减少约 20 万无效投放",
+            "createdAt": "2026-06-07",
+            "tags": [
+              "投放复盘",
+              "竞品对标",
+              "指标建模"
+            ],
+            "status": "已完成",
+            "groupId": null
+          },
+          {
+            "id": "p_1780843960501_2nmq",
+            "name": "抖音 电商直播 用户行为 分析",
+            "url": "https://vcnnr111xqu6.feishu.cn/mindnotes/ZVrMbJCjxmKnMFnzIqKc5aENnLg?from=space_personal_filelist&pre_pathname=%2Fdrive%2Ffolder%2FLVtAfvzIRlltYtduWWvcDkWNnNf&previous_navigation_time=1780843871378",
+            "description": "基于用户体验对用户动作进行了详细的拆解，通过优化用户观看体验、提升互动率为核心抓手，驱动直播GMV增长",
+            "role": "负责直播用户行为分析、漏斗拆解及问题定位",
+            "tools": "业务拆解、漏斗分析、指标体系、数据字典",
+            "outcome": "输出直播优化策略，推动季度 GMV 提升约 5%",
+            "createdAt": "2026-06-07",
+            "tags": [
+              "用户行为分析",
+              "漏斗分析",
+              "直播电商"
+            ],
+            "status": "迭代中",
+            "groupId": null
+          }
+        ]
+      },
+      {
+        "id": "agent",
+        "name": "Agent项目",
+        "groups": [],
+        "projects": []
+      },
+      {
+        "id": "ai-learning",
+        "name": "AI学习合集",
+        "groups": [
+          {
+            "id": "g_1781535836755_xyki",
+            "name": "通用"
+          },
+          {
+            "id": "g_1781535905846_9nt6",
+            "name": "Claude"
+          },
+          {
+            "id": "g_1781535912914_gnr9",
+            "name": "Codex"
+          }
+        ],
+        "projects": [
+          {
+            "id": "p_1781251016256_bxap",
+            "name": "AGENTS.md（全局）",
+            "url": "https://vcnnr111xqu6.feishu.cn/docx/QQE2dqKLUoJiEoxhT1zcJvynn1g",
+            "description": "codex的个人使用习惯",
+            "role": "",
+            "tools": "",
+            "outcome": "",
+            "createdAt": "2026-06-12",
+            "tags": [
+              "Codex"
+            ],
+            "status": "待补充",
+            "groupId": "g_1781535912914_gnr9"
+          },
+          {
+            "id": "p_1781251152628_xna8",
+            "name": "Skills合集",
+            "url": "https://vcnnr111xqu6.feishu.cn/docx/OeG8dWnIUoxDIZx2635cRLiRnrg",
+            "description": "实测好用的skills 、mcp、hook",
+            "role": "",
+            "tools": "",
+            "outcome": "",
+            "createdAt": "2026-06-12",
+            "tags": [
+              "SKILLS",
+              "MCP",
+              "HOOK"
+            ],
+            "status": "待补充",
+            "groupId": "g_1781535836755_xyki"
+          }
+        ]
+      },
+      {
+        "id": "c_1792716392277_h2h0",
+        "name": "Vibe Coding",
+        "groups": [],
+        "projects": [
+          {
+            "id": "p_1780815946402_ep9l",
+            "name": "日常清单",
+            "url": "https://task-list-chi-rust.vercel.app/",
+            "description": "记录每日必做、临时任务、长期规划、思维模式",
+            "role": "/",
+            "tools": "/",
+            "outcome": "/",
+            "createdAt": "2026-06-07",
+            "tags": [
+              "Vibe Coding",
+              "日常清单",
+              "Codex"
+            ],
+            "status": "已完成",
+            "groupId": null
+          },
+          {
+            "id": "p_1785932253396_a3rv",
+            "name": "日程管理",
+            "url": "https://daily-planner-cn.f-c-z-x.chatgpt.site",
+            "description": "Vibe coding 项目：日程管理",
+            "role": "/",
+            "tools": "/",
+            "outcome": "/",
+            "createdAt": "2026-08-05",
+            "tags": [
+              "Vibe Coding",
+              "ChatGPT",
+              "Codex"
+            ],
+            "status": "待补充",
+            "groupId": null
+          }
+        ]
+      }
+    ],
+    "notes": [
+      {
+        "id": "n_1781594853168_dsxf",
+        "title": "AI笔记整理（Claude / Codex）",
+        "excerpt": "从YouTube、B站、X等渠道学到",
+        "tags": [
+          "AI学习",
+          "笔记整理",
+          "Codex",
+          "Claude"
+        ],
+        "date": "2026-06-07",
+        "readTime": "5 分钟阅读",
+        "category": "AI学习合集",
+        "url": "https://vcnnr111xqu6.feishu.cn/mindnotes/Z0Emb4noVm23yDnXMsjcBwxBnTe"
+      },
+      {
+        "id": "n_1781594853168_dnx9",
+        "title": "AGENTS.md（全局）",
+        "excerpt": "codex的个人使用习惯",
+        "tags": [
+          "Codex",
+          "使用习惯"
+        ],
+        "date": "2026-06-12",
+        "readTime": "5 分钟阅读",
+        "category": "AI学习合集",
+        "url": "https://vcnnr111xqu6.feishu.cn/docx/QQE2dqKLUoJiEoxhT1zcJvynn1g"
+      },
+      {
+        "id": "n_1781594853168_ipz8",
+        "title": "项目级AGENTS.md",
+        "excerpt": "使用codex做网页开发时，创建的项目级AGETNS.md",
+        "tags": [
+          "Codex"
+        ],
+        "date": "2026-06-12",
+        "readTime": "5 分钟阅读",
+        "category": "AI学习合集",
+        "url": "https://vcnnr111xqu6.feishu.cn/docx/GmSVdtRDUozT1mxh8PYcuTdInCe"
+      },
+      {
+        "id": "n_1781594853168_rgh8",
+        "title": "Skills合集",
+        "excerpt": "实测好用的skills 、mcp、hook",
+        "tags": [
+          "SKILLS",
+          "MCP",
+          "HOOK"
+        ],
+        "date": "2026-06-12",
+        "readTime": "5 分钟阅读",
+        "category": "AI学习合集",
+        "url": "https://vcnnr111xqu6.feishu.cn/docx/OeG8dWnIUoxDIZx2635cRLiRnrg"
+      }
+    ],
+    "featuredWorks": [
+      "p_1780814882051_z593",
+      "p_1780841697010_p9ip",
+      "p_1780841238422_ic9b",
+      "p_1780843960501_2nmq"
+    ],
+    "featuredNotes": [
+      "n_1781594853168_dnx9",
+      "n_1781594853168_ipz8",
+      "n_1781594853168_dsxf"
+    ]
+  }
+}

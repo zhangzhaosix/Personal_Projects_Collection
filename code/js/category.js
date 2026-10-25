@@ -395,7 +395,7 @@ async function loadCategory() {
 
   if (!dataResult.ok) {
     renderCategoryError(dataResult.error || 'Firestore 数据加载失败');
-    return;
+    return false;
   }
 
   portfolioData = dataResult.data;
@@ -409,54 +409,16 @@ async function loadCategory() {
         <p>分类不存在，请返回首页重新选择</p>
       </div>
     `;
-    return;
+    return false;
   }
 
   document.getElementById('categoryTitle').textContent = `${currentCategory.name} · 共 ${currentCategory.projects.length} 个项目`;
   renderProjects();
+  return true;
 }
 
 async function bootstrapCategory() {
-  const initResult = await PortfolioFirebase.initFirebase();
-  if (!initResult.ok) {
-    renderCategoryError(initResult.error);
-    return;
-  }
-
-  currentAuthUser = initResult.auth ? initResult.auth.currentUser : null;
-
-  PortfolioFirebase.onAuthChange(async (user) => {
-    currentAuthUser = user;
-
-    if (PortfolioFirebase.isAdminUser(user)) {
-      const seedResult = await PortfolioFirebase.ensureAdminSeed();
-      if (seedResult.ok && seedResult.seeded) {
-        await loadCategory();
-      }
-
-      if (!isAdminMode && sessionStorage.getItem(SESSION_KEY) === 'true') {
-        enterAdminMode();
-      } else if (isAdminMode) {
-        setManageButtonState();
-        renderProjects();
-      }
-      return;
-    }
-
-    if (isAdminMode) {
-      exitAdminMode();
-      showToast('已退出管理模式', 'success');
-    } else {
-      setManageButtonState();
-      renderProjects();
-    }
-  });
-
   await loadCategory();
-
-  if (PortfolioFirebase.isAdminUser(currentAuthUser) && sessionStorage.getItem(SESSION_KEY) === 'true') {
-    enterAdminMode();
-  }
 }
 
 function isSignedInAdmin() {
@@ -471,16 +433,20 @@ function enterAdminMode() {
   }
 
   isAdminMode = true;
+  globalThis.PortfolioPublish?.setActive(true);
   activeGroupFilter = null;
   setManageButtonState();
   renderProjects();
 }
 
-function exitAdminMode() {
+async function exitAdminMode() {
   isAdminMode = false;
+  globalThis.PortfolioPublish?.setActive(false);
   activeGroupFilter = null;
   sessionStorage.removeItem(SESSION_KEY);
-  PortfolioFirebase.signOutAdmin();
+  await PortfolioFirebase.signOutAdmin();
+  currentAuthUser = null;
+  await loadCategory();
   document.getElementById('adminSidebar')?.classList.remove('visible');
   document.getElementById('projectGrid')?.classList.remove('has-sidebar');
   setManageButtonState();
@@ -509,20 +475,23 @@ async function verifyLogin() {
   }
 
   setLoginError('');
+  sessionStorage.removeItem(SESSION_KEY);
   const result = await PortfolioFirebase.signInAdmin(password);
   if (!result.ok) {
     setLoginError(result.error || '登录失败，请重试。');
     return;
   }
 
-  hideLoginModal();
   currentAuthUser = result.user;
-  sessionStorage.setItem(SESSION_KEY, 'true');
 
-  const seedResult = await PortfolioFirebase.ensureAdminSeed();
-  if (seedResult.ok && seedResult.seeded) {
-    await loadCategory();
+  if (!await loadCategory()) {
+    await PortfolioFirebase.signOutAdmin();
+    currentAuthUser = null;
+    setLoginError('读取云端最新内容失败，请检查 VPN 后重试。');
+    return;
   }
+  hideLoginModal();
+  sessionStorage.setItem(SESSION_KEY, 'true');
 
   enterAdminMode();
   showToast('管理员登录成功', 'success');

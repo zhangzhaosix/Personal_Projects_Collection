@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>作品集 · Shine</title>
   <link rel="icon" href="data:,">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -66,6 +64,7 @@
   <div class="modal-overlay" id="passwordModal">
     <div class="modal-box" style="max-width:380px;">
       <div class="modal-title" style="text-align:center;">管理员登录</div>
+      <p class="admin-network-notice">管理和发布需要连接云端，请先开启 VPN。普通浏览无需开启。</p>
       <div class="modal-body">
         <label class="field-label" for="inputLoginEmail">登录邮箱</label>
         <input type="email" class="input-field" id="inputLoginEmail" value="1801327763@qq.com" readonly style="font-size:15px;">
@@ -129,6 +128,7 @@
   </div>
 
   <script src="js/firebase-portfolio.js"></script>
+  <script src="js/publish.js"></script>
   <script src="js/works.js"></script>
 </body>
 </html>

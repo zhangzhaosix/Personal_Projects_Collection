@@ -72,134 +72,6 @@ function initTypewriter() {
   setTimeout(tick, 600);
 }
 
-const VISITOR_ID_KEY = 'portfolio-visitor-id';
-const VISITOR_CREATED_AT_KEY = 'portfolio-visitor-created-at';
-const VISITOR_RECORDED_KEY = 'portfolio-visitor-recorded';
-
-function readVisitorStorage(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeVisitorStorage(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // 隐私模式或浏览器禁用存储时，访客仍可正常浏览页面。
-  }
-}
-
-function createVisitorId() {
-  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID();
-  }
-
-  return `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function getVisitorIdentity() {
-  let visitorId = readVisitorStorage(VISITOR_ID_KEY);
-  if (!visitorId) {
-    visitorId = createVisitorId();
-    writeVisitorStorage(VISITOR_ID_KEY, visitorId);
-  }
-
-  let createdAt = Number(readVisitorStorage(VISITOR_CREATED_AT_KEY));
-  if (!Number.isSafeInteger(createdAt)) {
-    createdAt = Date.now();
-    writeVisitorStorage(VISITOR_CREATED_AT_KEY, String(createdAt));
-  }
-
-  return {
-    visitorId,
-    createdAt,
-    isRecorded: readVisitorStorage(VISITOR_RECORDED_KEY) === '1'
-  };
-}
-
-function trackCurrentVisitor() {
-  const portfolioFirebase = globalThis.PortfolioFirebase;
-  const identity = getVisitorIdentity();
-
-  if (identity.isRecorded) {
-    return Promise.resolve({ ok: true, skipped: true });
-  }
-
-  if (!portfolioFirebase || typeof portfolioFirebase.recordVisitor !== 'function') {
-    return Promise.resolve({ ok: false, error: '访客统计接口不可用。' });
-  }
-
-  return Promise.resolve(portfolioFirebase.recordVisitor(identity.visitorId, identity.createdAt))
-    .then((result) => {
-      if (result && result.ok) {
-        writeVisitorStorage(VISITOR_RECORDED_KEY, '1');
-      }
-      return result;
-    })
-    .catch((error) => ({
-      ok: false,
-      error: error && error.message ? error.message : '访客记录失败。'
-    }));
-}
-
-function initVisitorCounter() {
-  const el = document.getElementById('visitorCount');
-  if (!el) return;
-
-  const portfolioFirebase = globalThis.PortfolioFirebase;
-  const hideCount = () => {
-    el.hidden = true;
-    if (typeof el.setAttribute === 'function') el.setAttribute('aria-hidden', 'true');
-    el.textContent = '';
-  };
-
-  hideCount();
-
-  // 直接打开 file: 只做基础预览，不发起远程访客统计请求。
-  if (
-    location.protocol === 'file:' ||
-    !portfolioFirebase ||
-    typeof portfolioFirebase.onAuthChange !== 'function'
-  ) {
-    return;
-  }
-
-  const visitorRecordPromise = trackCurrentVisitor();
-  let requestId = 0;
-
-  portfolioFirebase.onAuthChange((user) => {
-    if (!portfolioFirebase.isAdminUser(user)) {
-      requestId += 1;
-      hideCount();
-      return;
-    }
-
-    const currentRequestId = ++requestId;
-    el.hidden = false;
-    if (typeof el.setAttribute === 'function') el.setAttribute('aria-hidden', 'false');
-    el.textContent = '👥 访问用户数: 加载中...';
-
-    visitorRecordPromise
-      .then(() => portfolioFirebase.getVisitorCount(user))
-      .then((result) => {
-        if (currentRequestId !== requestId || !portfolioFirebase.isAdminUser(user)) return;
-
-        const count = Number(result && result.count);
-        el.textContent = result && result.ok && Number.isFinite(count)
-          ? `👥 访问用户数: ${count.toLocaleString()}`
-          : '👥 访问用户数: 暂不可用';
-      })
-      .catch(() => {
-        if (currentRequestId === requestId) {
-          el.textContent = '👥 访问用户数: 暂不可用';
-        }
-      });
-  });
-}
-
 function escapeHtml(value) {
   const div = document.createElement('div');
   div.textContent = value || '';
@@ -424,12 +296,6 @@ function renderContact() {
 } */
 
 async function bootstrapHome() {
-  const initResult = await PortfolioFirebase.initFirebase();
-  if (!initResult.ok) {
-    renderHomeError(initResult.error);
-    return;
-  }
-
   const dataResult = await PortfolioFirebase.loadPortfolioData();
   if (dataResult.ok) {
     portfolioData = dataResult.data;
@@ -440,27 +306,11 @@ async function bootstrapHome() {
     return;
   }
 
-  if (dataResult.empty && PortfolioFirebase.isAdminUser(initResult.auth?.currentUser)) {
-    const seedResult = await PortfolioFirebase.ensureAdminSeed();
-    if (seedResult.ok) {
-      const retryResult = await PortfolioFirebase.loadPortfolioData();
-      if (retryResult.ok) {
-        portfolioData = retryResult.data;
-        renderFeaturedProjects();
-        renderNotesSection();
-        renderContact();
-        requestAnimationFrame(() => initScrollReveal());
-        return;
-      }
-    }
-  }
-
   renderHomeError(dataResult.error || '首页数据加载失败');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initTypewriter();
-  initVisitorCounter();
 
   bootstrapHome().catch((error) => {
     renderHomeError(`页面初始化失败：${error && error.message ? error.message : '未知错误'}`);
