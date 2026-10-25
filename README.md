@@ -8,14 +8,17 @@
 https://shine-works-xi.vercel.app/
 ```
 
+测试域名：`https://shine.is-a.dev/`。本次内容发布改造完成后需重新验证大陆 Wi-Fi 访问；原 Vercel 地址继续保留。
+
 ## 项目概览
 
 - 首页展示个人信息、精选作品、最近标记的 3 条精选笔记和联系方式
-- 首页访问用户数仅对管理员显示，按浏览器/设备去重统计
 - 作品页支持分页、搜索、管理员增删改、项目类型选择/自定义、精选标记，以及职责、工具/方法和产出字段维护
 - 笔记页支持分页、搜索、管理员增删改和精选标记
 - 联系页集中展示邮箱和微信联系方式
-- 数据通过 Firebase Auth + Firestore 管理，访客只读，管理员可编辑
+- 访客从本站 `published.json` 加载最新已发布内容，不连接 Firebase 或 Google 字体服务
+- 管理员开启 VPN 后通过 Firebase Auth + Firestore 编辑云端草稿，点击“发布”才更新公开页面
+- 访客统计功能已移除；不再记录浏览器标识，也不读取或显示访问用户数
 
 ## 目录结构
 
@@ -24,7 +27,10 @@ https://shine-works-xi.vercel.app/
 ├─ AGENTS.md              # 项目级协作规则
 ├─ PRODUCT.md             # 作品集定位与设计审查上下文
 ├─ README.md              # 项目说明
-├─ vercel.json            # Vercel 发布目录配置
+├─ vercel.json            # 发布目录、构建命令和缓存配置
+├─ api/publish.js         # 管理员发布接口
+├─ lib/publication.cjs    # 内容校验及 Firestore REST 访问
+├─ scripts/build.cjs      # 将冻结版本生成公开内容文件
 ├─ code/                  # 可运行的站点代码
 │  ├─ index.html          # 首页入口
 │  ├─ works.html          # 作品页
@@ -35,7 +41,8 @@ https://shine-works-xi.vercel.app/
 │  ├─ js/                 # 页面逻辑与 Firebase 封装
 │  ├─ assets/             # 图片和图标资源
 │  ├─ tests/              # 自动化测试
-│  ├─ data.json           # 本地示例数据
+│  ├─ data.json           # 历史示例数据，不参与线上读取
+│  ├─ published.json      # 当前公开内容快照
 │  └─ firestore.rules     # Firestore 规则示例
 └─ docs/                  # 历史方案、演示图片和归档资料
 ```
@@ -44,16 +51,17 @@ https://shine-works-xi.vercel.app/
 
 - HTML + CSS + JavaScript
 - Firebase Auth + Firestore
-- Google Fonts：Inter、Noto Sans SC
-- 纯静态站点，无依赖安装和打包步骤
+- 系统字体，无外部字体请求
+- 静态页面 + 一个原生 Node.js Vercel Function，无第三方服务端依赖
 
 ## 核心模块职责
 
-- `code/js/app.js`：首页渲染、精选作品、推荐笔记、联系方式和访问量
+- `code/js/app.js`：首页渲染、精选作品、推荐笔记和联系方式
 - `code/js/works.js`：作品数据加载、筛选、分页、管理员 CRUD 和精选管理
 - `code/js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理和图标匹配
 - `code/js/category.js`：作品分类页展示和管理
-- `code/js/firebase-portfolio.js`：Firebase 配置校验、初始化、管理员身份判断和 Firestore 读写
+- `code/js/firebase-portfolio.js`：公开快照读取、按需初始化 Firebase、管理员身份判断和云端草稿读写
+- `code/js/publish.js`：管理区发布按钮、草稿提示及实际上线版本确认
 
 ## 本地启动
 
@@ -69,41 +77,42 @@ python -m http.server 8000 --directory code
 http://localhost:8000/
 ```
 
-项目无需安装依赖，也没有构建步骤。
+本地静态预览无需安装依赖。发布接口须在 Vercel 预览或生产部署中验证。Vercel 构建执行 `node scripts/build.cjs`，只导出云端已冻结的发布版本；未点击发布的新草稿不会随代码部署公开。
 
 ## 自动化测试
 
 在项目根目录运行：
 
 ```bash
-node --test code/tests/notes-display.test.cjs
-node code/tests/visitor-counter.test.cjs
+node code/tests/notes-display.test.cjs
+node code/tests/publication.test.cjs
 node code/tests/works-category.test.cjs
 ```
 
 ## 环境变量 / 配置
 
-- 当前项目没有本地环境变量。
+- Vercel 生产环境变量 `PORTFOLIO_DEPLOY_HOOK`：现有项目、`main` 分支的 Deploy Hook URL，使用敏感类型保存，禁止放入前端或 Git。该变量缺失时发布接口拒绝发布，云端草稿和公开页面仍保留。
 - Firebase 配置位于 `code/js/firebase-portfolio.js` 的 `FIREBASE_CONFIG`。
 - 管理员邮箱位于同一文件的 `ADMIN_EMAIL`。
-- 访客记录位于 Firestore 的 `visitorStats/site/visitors` 集合，统计结果仅管理员可读。
+- 内容草稿位于 Firestore 的 `portfolio/site` 文档，`_publication` 字段保存点击发布时冻结的公开版本。管理员保存草稿采用合并写入，保留此字段。
+- 旧访客统计云端记录保留，不再使用；代码中的 Firestore 规则已移除相应访问规则。
 - 修改 Firebase 信息后，需要同步检查 Firebase Auth、Firestore 规则和授权域名配置。
 
 ## 常见问题
 
 - 页面提示 `Firebase 配置缺失`：补全 `code/js/firebase-portfolio.js` 中的 `FIREBASE_CONFIG`。
 - 管理员登录失败：确认 Firebase 已启用 Email/Password 登录，并且 `ADMIN_EMAIL` 与管理员邮箱一致。
-- 页面没有数据：使用管理员账号登录一次，让程序初始化 Firestore 文档。
-- 访问用户数不更新：确认已通过静态服务器访问，并已将 `code/firestore.rules` 发布到当前 Firebase 项目；直接打开 `file:` 页面不会执行远程计数。
-- 访问用户数只在管理员登录后显示；普通访客不会读取统计总数。
-- 图片或字体加载失败：检查资源相对路径及外部网络连接。
+- 普通页面没有数据：检查本站 `published.json` 是否返回成功，公开浏览不需要 Firebase 连接。
+- 发布长时间未完成：页面会保留待确认版本，重新登录可核对；只有静态文件中的版本号匹配后才显示“已上线”。发布失败可以重试，云端草稿保留。
 
 ## 部署注意事项
 
 - Vercel 通过根目录的 `vercel.json` 将 `code/` 设为发布目录。
 - Vercel 项目仍以仓库根目录作为 Root Directory，无需改为 `code/`。
 - 部署内容必须保留 `code/index.html`、`code/css/`、`code/js/` 和 `code/assets/` 的相对结构。
-- 发布新版本前，需要同步发布 `code/firestore.rules`，否则匿名访客记录和管理员统计查询会被拒绝。
+- 现有 `portfolio/site` 管理员写入规则兼容 `_publication` 字段。可按需同步收紧后的 `code/firestore.rules`；本次不删除历史云端记录。
+- Deploy Hook 必须绑定此项目的 `main` 分支，并将 URL 配置到生产环境；生成后须先部署新配置。
+- 构建无法读取或校验冻结版本时直接失败，保留线上旧部署，不降级为示例内容。
 - 如果以后重新启用 GitHub Pages，需要增加发布 `code/` 的 GitHub Actions 工作流；GitHub Pages 不能直接把任意 `code/` 目录作为分支发布源。
 - 更换 Firebase 项目或线上域名后，需要同步更新 Firebase 配置和授权域名。
 
@@ -112,3 +121,13 @@ node code/tests/works-category.test.cjs
 - 笔记页图标位于 `code/assets/notes-icons/`，不依赖外链加载。
 - 新增笔记时优先使用分类：`AI学习`、`常用文档`、`数据分析`、`用户行为`、`直播`、`其他`。
 - 前端按照“精选状态 → 分类精确匹配 → 标签关键词匹配 → 默认图标”选择图标。
+
+## 管理与发布
+
+1. 点击作品、笔记或分类页的 ⚙，按提示开启 VPN 后登录管理员。
+2. 编辑内容并保存到云端，可连续修改多项；普通访客仍看到上次已发布版本。
+3. 保存并关闭编辑框后，点击管理区“发布”。接口核验管理员身份，从云端读取并冻结整套公开内容，触发 Vercel 部署。
+4. 页面显示“发布中”；实际部署文件的版本号匹配后，显示“已上线”和版本时间。部署期间继续保存的修改需要再次发布。
+5. 退出管理后恢复公开版本。首次上线后需关闭 VPN，用大陆 Wi-Fi 核验首页、作品、笔记和分类。
+
+发布失败不影响线上旧版。没有管理员会话不能触发发布；服务端凭据不发送到浏览器。

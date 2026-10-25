@@ -111,14 +111,20 @@ async function verifyLogin() {
   const password = document.getElementById('inputLoginPassword').value.trim();
   if (!password) { setLoginError('请输入登录密码。'); return; }
   setLoginError('');
+  sessionStorage.removeItem(SESSION_KEY);
   const result = await PortfolioFirebase.signInAdmin(password);
   if (!result.ok) { setLoginError(result.error || '登录失败'); return; }
-  hideLoginModal();
-  sessionStorage.setItem(SESSION_KEY, 'true');
 
   // 登录后自动迁移笔记（仅首次）
   await autoMigrateNotes();
 
+  if (!await reloadData()) {
+    await PortfolioFirebase.signOutAdmin();
+    setLoginError('读取云端最新内容失败，请检查 VPN 后重试。');
+    return;
+  }
+  hideLoginModal();
+  sessionStorage.setItem(SESSION_KEY, 'true');
   enterAdminMode();
   showToast('管理员登录成功');
 }
@@ -171,14 +177,17 @@ function setManageButtonState() {
 function enterAdminMode() {
   if (!isSignedInAdmin()) { showLoginModal(); return; }
   isAdminMode = true;
+  globalThis.PortfolioPublish?.setActive(true);
   setManageButtonState();
   renderProjects();
 }
 
-function exitAdminMode() {
+async function exitAdminMode() {
   isAdminMode = false;
+  globalThis.PortfolioPublish?.setActive(false);
   sessionStorage.removeItem(SESSION_KEY);
-  PortfolioFirebase.signOutAdmin();
+  await PortfolioFirebase.signOutAdmin();
+  await reloadData();
   setManageButtonState();
   renderProjects();
 }
@@ -590,23 +599,18 @@ function initBackToTop() {
 
 async function reloadData() {
   const result = await PortfolioFirebase.loadPortfolioData();
-  if (!result.ok) return;
+  if (!result.ok) return false;
   portfolioData = result.data;
   allProjects = collectWorkProjects(portfolioData);
   filteredProjects = [...allProjects];
   currentPage = 1;
   applyFilters();
+  return true;
 }
 
 async function bootstrapWorks() {
   const grid = document.getElementById('worksGrid');
   if (grid) grid.innerHTML = '<div class="empty-state fade-in"><span class="empty-icon" aria-hidden="true"><svg class="works-loading-icon" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="8" width="22" height="20" rx="6" stroke="var(--border-color)" stroke-width="1.8"/><path d="M12 14h12M12 19h8M12 24h6" stroke="var(--accent-blue)" stroke-width="1.8"/><path d="M25 21v5M22.5 23.5h5" stroke="var(--accent-orange)" stroke-width="1.8"/></svg></span><p>正在加载作品数据...</p></div>';
-
-  const initResult = await PortfolioFirebase.initFirebase();
-  if (!initResult.ok) {
-    if (grid) grid.innerHTML = `<div class="empty-state"><span class="empty-icon">⚠</span><p>${escapeHtml(initResult.error)}</p><button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:16px;">重新加载</button></div>`;
-    return;
-  }
 
   const dataResult = await PortfolioFirebase.loadPortfolioData();
   if (!dataResult.ok) {
@@ -619,11 +623,6 @@ async function bootstrapWorks() {
   filteredProjects = [...allProjects];
   applyFilters();
   initSearch();
-
-  // Restore admin mode if session valid
-  if (PortfolioFirebase.isAdminUser(initResult.auth?.currentUser) && sessionStorage.getItem(SESSION_KEY) === 'true') {
-    enterAdminMode();
-  }
 }
 
 // Expose globals for HTML onclick

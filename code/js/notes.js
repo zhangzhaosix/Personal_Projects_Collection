@@ -138,14 +138,20 @@ async function verifyLogin() {
   const password = document.getElementById('inputLoginPassword').value.trim();
   if (!password) { setLoginError('请输入登录密码。'); return; }
   setLoginError('');
+  sessionStorage.removeItem(SESSION_KEY);
   const result = await PortfolioFirebase.signInAdmin(password);
   if (!result.ok) { setLoginError(result.error || '登录失败'); return; }
-  hideLoginModal();
-  sessionStorage.setItem(SESSION_KEY, 'true');
 
   // 登录后自动迁移笔记（仅首次）
   await autoMigrateNotes();
 
+  if (!await reloadData()) {
+    await PortfolioFirebase.signOutAdmin();
+    setLoginError('读取云端最新内容失败，请检查 VPN 后重试。');
+    return;
+  }
+  hideLoginModal();
+  sessionStorage.setItem(SESSION_KEY, 'true');
   enterAdminMode();
   showToast('管理员登录成功');
 }
@@ -198,14 +204,17 @@ function setManageButtonState() {
 function enterAdminMode() {
   if (!isSignedInAdmin()) { showLoginModal(); return; }
   isAdminMode = true;
+  globalThis.PortfolioPublish?.setActive(true);
   setManageButtonState();
   renderAll();
 }
 
-function exitAdminMode() {
+async function exitAdminMode() {
   isAdminMode = false;
+  globalThis.PortfolioPublish?.setActive(false);
   sessionStorage.removeItem(SESSION_KEY);
-  PortfolioFirebase.signOutAdmin();
+  await PortfolioFirebase.signOutAdmin();
+  await reloadData();
   setManageButtonState();
   renderAll();
   showToast('已退出管理模式');
@@ -456,22 +465,17 @@ function initBackToTop() {
 
 async function reloadData() {
   const result = await PortfolioFirebase.loadPortfolioData();
-  if (!result.ok) return;
+  if (!result.ok) return false;
   portfolioData = result.data;
   allNotes = Array.isArray(portfolioData.notes) ? [...portfolioData.notes] : [];
   currentPage = 1;
   renderAll();
+  return true;
 }
 
 async function bootstrapNotes() {
   const grid = document.getElementById('notesGrid');
   if (grid) grid.innerHTML = renderEmptyState('正在加载笔记数据...');
-
-  const initResult = await PortfolioFirebase.initFirebase();
-  if (!initResult.ok) {
-    if (grid) grid.innerHTML = renderEmptyState(initResult.error || '初始化失败', NOTE_ICON_PATHS.default, '<div class="mt-16"><button class="btn btn-outline btn-sm" onclick="location.reload()">重新加载</button></div>');
-    return;
-  }
 
   const dataResult = await PortfolioFirebase.loadPortfolioData();
   if (!dataResult.ok) {
@@ -489,11 +493,6 @@ async function bootstrapNotes() {
 
   renderAll();
   initSearch();
-
-  // Restore admin mode
-  if (PortfolioFirebase.isAdminUser(initResult.auth?.currentUser) && sessionStorage.getItem(SESSION_KEY) === 'true') {
-    enterAdminMode();
-  }
 }
 
 // Expose globals

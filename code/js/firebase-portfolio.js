@@ -10,7 +10,6 @@
 
   const PROJECT_STATUSES = ['已完成', '进行中', '迭代中', '待补充'];
   const PORTFOLIO_DOC_PATH = ['portfolio', 'site'];
-  const VISITOR_COLLECTION_PATH = ['visitorStats', 'site', 'visitors'];
 
   const DEFAULT_DATA = {
     categories: [
@@ -118,6 +117,7 @@
   let initResult = null;
   let initPromise = null;
   let authListenersBound = false;
+  let managementMode = false;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -241,11 +241,9 @@
           signInWithEmailAndPassword: authModule.signInWithEmailAndPassword,
           signOut: authModule.signOut,
           getFirestore: firestoreModule.getFirestore,
-          collection: firestoreModule.collection,
           doc: firestoreModule.doc,
           getDoc: firestoreModule.getDoc,
-          setDoc: firestoreModule.setDoc,
-          getCountFromServer: firestoreModule.getCountFromServer
+          setDoc: firestoreModule.setDoc
         };
 
         return modulesCache;
@@ -256,7 +254,7 @@
   }
 
   async function initFirebase() {
-    if (initResult) {
+    if (initResult && initResult.ok) {
       return initResult;
     }
 
@@ -274,7 +272,11 @@
       }
 
       try {
-        const modules = await loadModules();
+        let timer;
+        const modules = await Promise.race([
+          loadModules(),
+          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('连接云端超时')), 15000); })
+        ]).finally(() => clearTimeout(timer));
         firebaseApp = modules.initializeApp(FIREBASE_CONFIG);
         auth = modules.getAuth(firebaseApp);
         db = modules.getFirestore(firebaseApp);
@@ -291,9 +293,11 @@
         };
         return initResult;
       } catch (error) {
+        cachedModulesPromise = null;
+        initPromise = null;
         initResult = {
           ok: false,
-          error: `Firebase 初始化失败：${error && error.message ? error.message : '未知错误'}`
+          error: '云端连接失败，请开启 VPN 后重试。已发布内容不受影响。'
         };
         return initResult;
       }
@@ -313,74 +317,6 @@
   function getPortfolioDocRef() {
     if (!db || !modulesCache) return null;
     return modulesCache.doc(db, PORTFOLIO_DOC_PATH[0], PORTFOLIO_DOC_PATH[1]);
-  }
-
-  function getVisitorDocRef(visitorId) {
-    if (!db || !modulesCache || typeof modulesCache.doc !== 'function') return null;
-    return modulesCache.doc(db, ...VISITOR_COLLECTION_PATH, visitorId);
-  }
-
-  function getVisitorCollectionRef() {
-    if (!db || !modulesCache || typeof modulesCache.collection !== 'function') return null;
-    return modulesCache.collection(db, ...VISITOR_COLLECTION_PATH);
-  }
-
-  function isValidVisitorId(visitorId) {
-    return typeof visitorId === 'string' && /^[A-Za-z0-9_-]{8,128}$/.test(visitorId);
-  }
-
-  async function recordVisitor(visitorId, createdAt) {
-    const context = await initFirebase();
-    if (!context.ok || !db) {
-      return context;
-    }
-
-    if (!isValidVisitorId(visitorId)) {
-      return { ok: false, error: '访客标识无效。' };
-    }
-
-    const ref = getVisitorDocRef(visitorId);
-    const normalizedCreatedAt = Number.isSafeInteger(Number(createdAt))
-      ? Number(createdAt)
-      : Date.now();
-
-    try {
-      // 同一 visitorId 使用同一 createdAt 重复写入时，规则会允许幂等更新。
-      await context.modules.setDoc(ref, { createdAt: normalizedCreatedAt });
-      return { ok: true };
-    } catch (error) {
-      return {
-        ok: false,
-        error: `记录访客失败：${error && error.message ? error.message : '未知错误'}`
-      };
-    }
-  }
-
-  async function getVisitorCount(user) {
-    const context = await initFirebase();
-    if (!context.ok || !db) {
-      return context;
-    }
-
-    const currentUser = user || (auth && auth.currentUser);
-    if (!isAdminUser(currentUser)) {
-      return { ok: false, error: '只有管理员可以读取访客统计。' };
-    }
-
-    const visitorCollection = getVisitorCollectionRef();
-    if (!visitorCollection || typeof context.modules.getCountFromServer !== 'function') {
-      return { ok: false, error: 'Firebase 访客统计模块不可用。' };
-    }
-
-    try {
-      const snapshot = await context.modules.getCountFromServer(visitorCollection);
-      return { ok: true, count: snapshot.data().count };
-    } catch (error) {
-      return {
-        ok: false,
-        error: `读取访客统计失败：${error && error.message ? error.message : '未知错误'}`
-      };
-    }
   }
 
   async function ensureAdminSeed() {
@@ -405,6 +341,18 @@
   }
 
   async function loadPortfolioData() {
+    if (!managementMode) {
+      try {
+        const response = await fetch('published.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('读取已发布内容失败');
+        const snapshot = await response.json();
+        if (!snapshot.version || !Array.isArray(snapshot.data?.categories) || !Array.isArray(snapshot.data?.notes)) throw new Error('发布内容格式不完整');
+        globalThis.portfolioPublication = { version: snapshot.version, publishedAt: snapshot.publishedAt };
+        return { ok: true, data: normalizePortfolioData(snapshot.data) };
+      } catch (error) {
+        return { ok: false, error: '已发布内容加载失败，请刷新页面重试。' };
+      }
+    }
     const context = await initFirebase();
     if (!context.ok || !db) {
       return context;
@@ -412,7 +360,11 @@
 
     try {
       const ref = getPortfolioDocRef();
-      const snapshot = await context.modules.getDoc(ref);
+      let timer;
+      const snapshot = await Promise.race([
+        context.modules.getDoc(ref),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('读取云端超时，请检查 VPN 后重试')), 15000); })
+      ]).finally(() => clearTimeout(timer));
       if (!snapshot.exists()) {
         return {
           ok: false,
@@ -448,7 +400,8 @@
     }
 
     try {
-      await context.modules.setDoc(getPortfolioDocRef(), normalizePortfolioData(data));
+      await context.modules.setDoc(getPortfolioDocRef(), normalizePortfolioData(data), { merge: true });
+      globalThis.dispatchEvent?.(new Event('portfolio-draft-saved'));
       return { ok: true };
     } catch (error) {
       return {
@@ -466,6 +419,8 @@
 
     try {
       const result = await context.modules.signInWithEmailAndPassword(auth, ADMIN_EMAIL, password);
+      if (!isAdminUser(result.user)) return { ok: false, error: '只有管理员可以管理内容。' };
+      managementMode = true;
       return {
         ok: true,
         user: result.user
@@ -479,6 +434,7 @@
   }
 
   async function signOutAdmin() {
+    managementMode = false;
     const context = await initFirebase();
     if (!context.ok || !auth) {
       return context;
@@ -515,7 +471,7 @@
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
   }
 
-  globalThis.PortfolioFirebase = {
+  const api = {
     ADMIN_EMAIL,
     DEFAULT_DATA,
     PROJECT_STATUSES,
@@ -523,8 +479,6 @@
     ensureAdminSeed,
     loadPortfolioData,
     savePortfolioData,
-    recordVisitor,
-    getVisitorCount,
     signInAdmin,
     signOutAdmin,
     onAuthChange,
@@ -537,4 +491,6 @@
     getAuthReady,
     getDbReady
   };
+  globalThis.PortfolioFirebase = api;
+  if (typeof module !== 'undefined') module.exports = { ...api, FIREBASE_CONFIG };
 })();
