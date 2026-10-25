@@ -12,6 +12,7 @@ build/
 .vercel/
 .netlify/
 .cache/
+.playwright-mcp/
 .turbo/
 
 *.log

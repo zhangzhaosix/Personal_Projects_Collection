@@ -86,17 +86,11 @@ function escapeUrl(value) {
 
 function renderHomeError(message) {
   const featured = document.getElementById('featuredSection');
-  const worksLink = document.getElementById('worksLinkSection');
   const notes = document.getElementById('notesSection');
-  const notesLink = document.getElementById('notesLinkSection');
-  const contact = document.getElementById('contactSection');
   if (!featured) return;
 
   featured.style.display = '';
-  if (worksLink) worksLink.style.display = 'none';
   if (notes) notes.style.display = 'none';
-  if (notesLink) notesLink.style.display = 'none';
-  if (contact) contact.style.display = 'none';
 
   featured.innerHTML = `
     <div class="empty-state home-error reveal visible">
@@ -112,6 +106,7 @@ const WORK_NAMES_FALLBACK = [
   '【抖音电商 数据监控 BI看板】',
   '电商 达人种草 洞察分析 报告',
   '抖音 电商直播 用户行为 分析',
+  '抖音电商直播用户行为分析',
   '日常清单网页',
   '作品集网页',
   '音乐合集'
@@ -129,7 +124,7 @@ function renderFeaturedProjects() {
       if (!Array.isArray(category.projects)) return;
       category.projects.forEach((project) => {
         if (featuredIds.includes(project.id)) {
-          featured.push({ ...project, categoryName: category.name });
+          featured.push(project);
         }
       });
     });
@@ -142,7 +137,7 @@ function renderFeaturedProjects() {
       for (const project of category.projects) {
         if (featured.length >= 2) break;
         if (WORK_NAMES_FALLBACK.includes(project.name)) {
-          featured.push({ ...project, categoryName: category.name });
+          featured.push(project);
         }
       }
       if (featured.length >= 2) break;
@@ -157,15 +152,17 @@ function renderFeaturedProjects() {
   el.style.display = '';
   el.innerHTML = `
     <div class="featured-inner">
-      <h3 class="featured-heading">精选作品</h3>
+      <div class="featured-header">
+        <h2 class="featured-heading">精选作品</h2>
+        <a href="works.html" class="featured-all-link">查看全部作品 →</a>
+      </div>
       <div class="featured-grid">
         ${featured
           .map(
-            (project, idx) => `
-              <a class="featured-card" href="${escapeUrl(project.url)}" target="_blank" rel="noopener" style="animation-delay:${idx * 0.1}s;">
-                <div class="featured-category">${escapeHtml(project.categoryName || '')}</div>
-                <div class="featured-name">${escapeHtml(project.name)}</div>
-                <div class="featured-desc">${escapeHtml(project.description || '暂无简介')}</div>
+            (project) => `
+              <a class="featured-card" href="${escapeUrl(project.url)}" target="_blank" rel="noopener">
+                <h3 class="featured-name">${escapeHtml(project.name)}</h3>
+                <p class="featured-desc">${formatProjectDescription(project.description)}</p>
               </a>
             `
           )
@@ -195,8 +192,9 @@ function renderNotesSection() {
 
   el.style.display = '';
   el.innerHTML = `
-    <div class="section-header">
+    <div class="section-header notes-header">
       <h2 class="section-title">推荐笔记</h2>
+      <a href="notes.html" class="notes-all-link">查看全部笔记 →</a>
     </div>
     <div class="notes-preview-grid">
       ${previewNotes.map(note => {
@@ -208,24 +206,9 @@ function renderNotesSection() {
             <span class="note-preview-tag">${escapeHtml(tags.length > 0 ? tags[0] : '笔记')}</span>
             <h3 class="note-preview-title">${escapeHtml(note.title)}</h3>
             <p class="note-preview-excerpt">${escapeHtml(note.excerpt || '')}</p>
-            <span class="note-preview-meta">${escapeHtml(note.date || '')}</span>
           </a>
         `;
       }).join('')}
-    </div>
-  `;
-}
-
-function renderContact() {
-  const el = document.getElementById('contactSection');
-  if (!el) return;
-
-  el.innerHTML = `
-    <div class="contact-inner">
-      <a href="mailto:1801327763@qq.com" class="contact-link" title="发送邮件">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
-        <span>1801327763@qq.com</span>
-      </a>
     </div>
   `;
 }
@@ -301,7 +284,6 @@ async function bootstrapHome() {
     portfolioData = dataResult.data;
     renderFeaturedProjects();
     renderNotesSection();
-    renderContact();
     requestAnimationFrame(() => initScrollReveal());
     return;
   }

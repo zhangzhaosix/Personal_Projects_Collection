@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shine · 作品集</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,7 +13,7 @@
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">Shine</a>
       <div class="nav-links">
-        <a href="index.html" class="nav-item active">首页</a>
+        <a href="index.html" class="nav-item active" aria-current="page">首页</a>
         <a href="works.html" class="nav-item">作品</a>
         <a href="notes.html" class="nav-item">笔记</a>
         <a href="contact.html" class="nav-item">联系</a>
@@ -28,9 +29,14 @@
         <canvas id="asciiPortrait" width="1122" height="1402" aria-hidden="true"></canvas>
       </div>
       <div class="hero-intro">
+        <p class="hero-focus">数据分析 · AI 实践</p>
         <h1 class="hero-name" id="heroName">Shine</h1>
         <p class="hero-tagline">
-          项目记录成长 | 笔记沉淀思考——个人作品集
+          项目记录成长|笔记沉淀思考
+        </p>
+        <p class="hero-description">
+          从电商数据治理、投放分析，到 AI 工具实践。<br>
+          这里记录我的项目过程、方法与产出。
         </p>
 
         <!-- 打字机轮播 -->
@@ -51,36 +57,25 @@
       <!-- 由 JS 动态渲染 -->
     </div>
 
-    <!-- 查看全部作品 -->
-    <div class="home-section reveal" id="worksLinkSection">
-      <div style="text-align:center;">
-        <a href="works.html" class="btn btn-outline">查看全部作品 →</a>
-      </div>
-    </div>
-
     <!-- 推荐笔记 -->
     <div class="home-section reveal" id="notesSection">
       <!-- 由 JS 动态渲染 -->
     </div>
 
-    <!-- 查看全部笔记 -->
-    <div class="home-section reveal" id="notesLinkSection">
-      <div style="text-align:center;">
-        <a href="notes.html" class="btn btn-outline">查看全部笔记 →</a>
-      </div>
-    </div>
-
-    <div class="contact-section reveal" id="contactSection">
-      <!-- 由 JS 动态渲染 -->
-    </div>
-
     <!-- 页脚 -->
-    <div class="footer">
-      <span>© 2026 Shine ·项目记录成长 | 笔记沉淀思考</span>
-    </div>
+    <footer class="contact-section" id="contactSection">
+      <div class="contact-inner">
+        <a href="mailto:1801327763@qq.com" class="contact-link" title="发送邮件">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+          <span>1801327763@qq.com</span>
+        </a>
+        <span class="contact-copyright">© 2026 Shine</span>
+      </div>
+    </footer>
   </div>
 
   <script src="js/firebase-portfolio.js"></script>
+  <script src="js/project-text.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ascii-avatar.js"></script>
 </body>

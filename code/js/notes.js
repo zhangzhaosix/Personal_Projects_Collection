@@ -373,11 +373,10 @@ function renderNotes() {
   }
 
   grid.innerHTML = pageNotes.map((note) => {
-    const tags = Array.isArray(note.tags) ? note.tags : [];
     const isFeatured = featuredNotes.includes(note.id);
     const iconSrc = resolveNoteIcon(note, isFeatured);
     const cardActions = isAdminMode ? `
-      <div class="note-card-footer" style="border-top:1px solid var(--border-light);padding-top:12px;margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <div class="note-card-actions">
         <button class="btn btn-xs ${isFeatured ? 'btn-solid' : 'btn-outline'}" onclick="window.toggleFeatured('${note.id}', ${isFeatured})">${isFeatured ? '★ 精选' : '☆ 标记'}</button>
         <button class="btn btn-outline btn-xs" onclick="window.editNote('${note.id}')">✏ 编辑</button>
         <button class="btn btn-danger btn-xs" onclick="window.confirmDelete('${note.id}','${escapeHtml(note.title).replace(/'/g, "\\'")}')">🗑 删除</button>
@@ -387,14 +386,11 @@ function renderNotes() {
     return `
       <div class="note-card">
         <div class="note-card-icon">${renderIconImage(iconSrc, 'note-card-icon-image')}</div>
-        ${isFeatured ? '<span class="note-card-featured-label">精选笔记</span>' : ''}
-        <h3 class="note-card-title">${escapeHtml(note.title)}</h3>
-        <p class="note-card-excerpt">${escapeHtml(note.excerpt || '')}</p>
-        <div class="note-card-tags">${tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>
-        <div class="note-card-footer">
-          <span>${escapeHtml(note.date || '')}</span>
-          ${note.url ? `<a href="${escapeHtml(note.url)}" target="_blank" rel="noopener" class="note-card-read" onclick="event.stopPropagation();">阅读全文</a>` : '<span class="note-card-read">阅读全文</span>'}
+        <div class="note-card-copy">
+          <h2 class="note-card-title">${escapeHtml(note.title)}</h2>
+          <p class="note-card-excerpt">${escapeHtml(note.excerpt || '')}</p>
         </div>
+        ${note.url ? `<a href="${escapeHtml(note.url)}" target="_blank" rel="noopener" class="note-card-read" onclick="event.stopPropagation();">阅读全文</a>` : '<span class="note-card-read" aria-disabled="true">暂无公开链接</span>'}
         ${cardActions}
       </div>
     `;

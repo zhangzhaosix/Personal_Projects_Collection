@@ -486,12 +486,13 @@ function renderProjects() {
   const featuredWorks = Array.isArray(portfolioData?.featuredWorks) ? portfolioData.featuredWorks : [];
 
   grid.innerHTML = pageProjects.map((project, idx) => {
-    const tags = Array.isArray(project.tags) ? project.tags : [];
     const isFeatured = featuredWorks.includes(project.id);
     const safeUrl = escapeUrl(project.url);
+    const evidence = [['职责', project.role], ['方法', project.tools]]
+      .filter(([, value]) => String(value || '').trim() && String(value).trim() !== '/');
     const cardClasses = [
       'project-card',
-      isFeatured ? 'project-card-featured' : '',
+      isAdminMode && isFeatured ? 'project-card-featured' : '',
       isAdminMode ? 'admin-mode' : '',
       'reveal',
       `delay-${Math.min(idx + 1, 6)}`
@@ -502,29 +503,19 @@ function renderProjects() {
         <div class="card-body">
           <div class="project-card-topline">
             <span class="project-kicker">${escapeHtml(project.categoryName || '作品')}</span>
-            ${isFeatured ? '<span class="project-featured-badge">精选</span>' : ''}
           </div>
-          <div class="project-name">${escapeHtml(project.name)}</div>
-          <div class="project-desc">${escapeHtml(project.description || '暂无简介')}</div>
-          <dl class="project-evidence" aria-label="项目证据">
-            <div class="project-evidence-row">
-              <dt>职责</dt>
-              <dd class="${project.role ? '' : 'project-evidence-empty'}">${escapeHtml(project.role || '待补充')}</dd>
-            </div>
-            <div class="project-evidence-row">
-              <dt>工具 / 方法</dt>
-              <dd class="${project.tools ? '' : 'project-evidence-empty'}">${escapeHtml(project.tools || '待补充')}</dd>
-            </div>
-            <div class="project-evidence-row">
-              <dt>产出</dt>
-              <dd class="${project.outcome ? '' : 'project-evidence-empty'}">${escapeHtml(project.outcome || '待补充')}</dd>
-            </div>
-          </dl>
-          <div class="project-meta">
-            <div class="tag-list project-tag-list">
-              ${tags.length ? tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('') : '<span class="tag-pill tag-empty">暂无标签</span>'}
-            </div>
-          </div>
+          <h2 class="project-name">${escapeHtml(project.name)}</h2>
+          <p class="project-desc">${formatProjectDescription(project.description)}</p>
+          ${evidence.length ? `
+            <dl class="project-evidence" aria-label="项目证据">
+              ${evidence.map(([label, value]) => `
+                <div class="project-evidence-row">
+                  <dt>${label}</dt>
+                  <dd>${escapeHtml(value)}</dd>
+                </div>
+              `).join('')}
+            </dl>
+          ` : ''}
         </div>
         ${!isAdminMode ? `
           <div class="card-footer">

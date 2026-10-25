@@ -14,7 +14,7 @@
       <a href="index.html" class="nav-logo">Shine</a>
       <div class="nav-links">
         <a href="index.html" class="nav-item">首页</a>
-        <a href="works.html" class="nav-item active">作品</a>
+        <a href="works.html" class="nav-item active" aria-current="page">作品</a>
         <a href="notes.html" class="nav-item">笔记</a>
         <a href="contact.html" class="nav-item">联系</a>
       </div>
@@ -27,12 +27,12 @@
       <div class="page-hero-content">
         <h1 class="page-hero-title">作品集</h1>
         <p class="page-hero-sub">实习作品集：SQL 取数 · 自动化报表 · BI 可视化 · 分析复盘</p>
-        <div class="search-bar" style="margin-top:24px;max-width:400px;">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input type="text" class="search-input" id="worksSearchInput" placeholder="搜索作品标题或关键词..." aria-label="搜索作品">
-        </div>
+      </div>
+      <div class="search-bar works-search">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" class="search-input" id="worksSearchInput" placeholder="搜索作品标题或关键词..." aria-label="搜索作品">
       </div>
     </section>
 
@@ -47,9 +47,15 @@
     </div>
 
     <!-- 页脚 -->
-    <div class="footer">
-      <span>© 2026 Shine ·项目记录成长 | 笔记沉淀思考</span>
-    </div>
+    <footer class="contact-section">
+      <div class="contact-inner">
+        <a href="mailto:1801327763@qq.com" class="contact-link" title="发送邮件">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+          <span>1801327763@qq.com</span>
+        </a>
+        <span class="contact-copyright">© 2026 Shine</span>
+      </div>
+    </footer>
   </div>
 
   <!-- 浮动管理按钮 -->
@@ -128,6 +134,7 @@
   </div>
 
   <script src="js/firebase-portfolio.js"></script>
+  <script src="js/project-text.js"></script>
   <script src="js/publish.js"></script>
   <script src="js/works.js"></script>
 </body>

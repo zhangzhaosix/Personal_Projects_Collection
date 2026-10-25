@@ -67,6 +67,7 @@ function loadWorksHarness(saveResult = { ok: true }) {
     clearTimeout() {},
     console
   });
+  vm.runInContext(fs.readFileSync(path.join(root, 'js', 'project-text.js'), 'utf8'), context);
   const source = fs.readFileSync(path.join(root, 'js', 'works.js'), 'utf8');
   vm.runInContext(`${source}\n;globalThis.WorksTest = {
     collectWorkProjects,

@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>联系方式 - Shine</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="contact-body">
   <nav class="navbar">
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">Shine</a>
@@ -14,7 +15,7 @@
         <a href="index.html" class="nav-item">首页</a>
         <a href="works.html" class="nav-item">作品</a>
         <a href="notes.html" class="nav-item">笔记</a>
-        <a href="contact.html" class="nav-item active">联系</a>
+        <a href="contact.html" class="nav-item active" aria-current="page">联系</a>
       </div>
     </div>
   </nav>
@@ -22,39 +23,55 @@
   <main class="contact-page">
     <section class="contact-hero fade-in">
       <h1 class="contact-title">联系方式</h1>
+      <p class="contact-intro">关于项目细节，欢迎通过邮箱或微信联系。</p>
     </section>
 
     <section class="contact-panel">
       <div class="contact-panel-inner">
         <div class="contact-list">
           <div class="contact-row">
-            <span class="contact-label">QQ 邮箱</span>
-            <a class="contact-value contact-value-link" href="mailto:1801327763@qq.com">1801327763@qq.com</a>
+            <div class="contact-details">
+              <span class="contact-label">QQ 邮箱</span>
+              <a id="contactQqEmail" class="contact-value contact-value-link" href="mailto:1801327763@qq.com">1801327763@qq.com</a>
+            </div>
+            <button type="button" class="btn btn-outline contact-copy" data-copy-target="contactQqEmail" data-copy-label="QQ 邮箱" aria-label="复制 QQ 邮箱">复制邮箱</button>
           </div>
 
           <div class="contact-row">
-            <span class="contact-label">个人微信</span>
-            <span class="contact-value">zhangzhaosix</span>
+            <div class="contact-details">
+              <span class="contact-label">Gmail 邮箱</span>
+              <a id="contactGmail" class="contact-value contact-value-link" href="mailto:zhangzhaosix@gmail.com">zhangzhaosix@gmail.com</a>
+            </div>
+            <button type="button" class="btn btn-outline contact-copy" data-copy-target="contactGmail" data-copy-label="Gmail 邮箱" aria-label="复制 Gmail 邮箱">复制邮箱</button>
           </div>
 
-          <div class="contact-row contact-row-compact">
-            <span class="contact-label">微信二维码</span>
-            <p class="contact-text">扫码添加微信，备注来意即可。</p>
+          <div class="contact-row">
+            <div class="contact-details">
+              <span class="contact-label">个人微信</span>
+              <span id="contactWechat" class="contact-value">zhangzhaosix</span>
+            </div>
+            <button type="button" class="btn btn-outline contact-copy" data-copy-target="contactWechat" data-copy-label="微信号" aria-label="复制微信号">复制微信</button>
           </div>
+          <p id="contactCopyStatus" class="contact-copy-status" role="status" aria-live="polite"></p>
         </div>
 
         <figure class="contact-qr-card">
-          <div class="contact-qr-frame">
-            <img src="assets/contact/wechat-qr.jpg" alt="个人微信二维码" class="contact-qr-image">
-          </div>
-          <figcaption class="contact-qr-caption">个人微信二维码</figcaption>
+          <img src="assets/contact/wechat-qr.jpg" alt="个人微信二维码" class="contact-qr-image">
+          <figcaption class="contact-qr-caption">扫码添加微信，备注来意即可。</figcaption>
         </figure>
       </div>
     </section>
   </main>
 
-  <div class="footer">
-    <span>© 2026 Shine | 个人作品集</span>
-  </div>
+  <footer class="contact-section">
+    <div class="contact-inner">
+      <a href="mailto:1801327763@qq.com" class="contact-link" title="发送邮件">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+        <span>1801327763@qq.com</span>
+      </a>
+      <span class="contact-copyright">© 2026 Shine</span>
+    </div>
+  </footer>
+  <script src="js/contact.js"></script>
 </body>
 </html>
