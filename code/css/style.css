@@ -57,7 +57,7 @@
 
 .publication-panel {
   max-width: 1080px;
-  margin: 88px auto 0;
+  margin: 28px auto 0;
   padding: 20px 24px;
   display: flex;
   align-items: center;
@@ -80,7 +80,7 @@
 .publication-panel button:disabled { opacity: .6; cursor: wait; }
 .publication-panel button:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 4px; }
 @media (max-width: 640px) {
-  .publication-panel { margin: 80px 16px 0; padding: 16px; align-items: stretch; flex-direction: column; gap: 16px; }
+  .publication-panel { margin: 20px 16px 0; padding: 16px; align-items: stretch; flex-direction: column; gap: 16px; }
   .publication-panel button { align-self: flex-start; }
 }
 
@@ -186,14 +186,7 @@ img {
    导航栏（通用）
    ============================================ */
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: var(--z-nav);
   background: rgba(248, 243, 234, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-light);
   transition: background var(--transition-base);
 }
@@ -594,46 +587,61 @@ textarea.input-field {
 /* ============================================
    首页（index.html）
    ============================================ */
-.home-page {
-  padding-top: 60px; /* navbar height */
-}
-
 /* Hero 区 */
 .hero-section {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
   align-items: center;
-  text-align: center;
-  padding: var(--space-3xl) var(--space-xl) var(--space-2xl);
-  max-width: 720px;
+  gap: var(--space-3xl);
+  padding: var(--space-2xl) var(--space-xl);
+  max-width: 1060px;
   margin: 0 auto;
 }
 
-.hero-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--bg-card);
-  box-shadow: var(--shadow-md);
-  margin-bottom: var(--space-lg);
+.hero-portrait {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1122 / 1402;
+  background: #090A0A;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.hero-portrait-image,
+.hero-portrait canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-portrait canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.hero-portrait.is-ready .hero-portrait-image { opacity: 0; }
+.hero-portrait.is-ready canvas { opacity: 1; }
+
+.hero-intro {
+  min-width: 0;
 }
 
 .hero-name {
-  font-size: 36px;
+  font-size: clamp(40px, 5vw, 60px);
   font-weight: 800;
   letter-spacing: -0.5px;
   color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
 .hero-tagline {
-  font-size: 16px;
-  color: var(--text-secondary);
+  font-size: 18px;
+  color: var(--text-primary);
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.9;
   max-width: 560px;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-lg);
 }
 
 .hero-sub {
@@ -646,13 +654,13 @@ textarea.input-field {
 .typewriter-wrapper {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   height: 28px;
   font-size: 15px;
   color: var(--text-secondary);
   font-weight: 400;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: 0;
 }
 
 .typewriter-prefix {
@@ -1050,7 +1058,6 @@ textarea.input-field {
 .category-page,
 .works-page,
 .notes-page {
-  padding-top: 60px; /* navbar height */
   min-height: 100vh;
 }
 
@@ -2074,8 +2081,13 @@ textarea.input-field {
 }
 
 @media (max-width: 900px) {
+  .hero-section {
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    gap: var(--space-xl);
+  }
+
   .hero-name {
-    font-size: 28px;
+    font-size: 44px;
   }
 
   .page-hero-title {
@@ -2132,16 +2144,23 @@ textarea.input-field {
   }
 
   .hero-section {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: var(--space-lg);
     padding: var(--space-2xl) var(--space-md) var(--space-xl);
+    text-align: center;
   }
 
-  .hero-avatar {
-    width: 80px;
-    height: 80px;
+  .hero-portrait {
+    width: min(100%, 280px);
+  }
+
+  .hero-intro .typewriter-wrapper {
+    justify-content: center;
   }
 
   .hero-name {
-    font-size: 24px;
+    font-size: 36px;
   }
 
   .hero-tagline {
@@ -2192,11 +2211,6 @@ textarea.input-field {
 
   .card-footer {
     padding: var(--space-sm) var(--space-md) var(--space-md);
-  }
-
-  .works-page,
-  .notes-page {
-    padding-top: 60px;
   }
 
   .toolbar {
@@ -2334,7 +2348,6 @@ textarea.input-field {
    联系页（contact.html）
    ============================================ */
 .contact-page {
-  padding-top: 60px;
   min-height: 100vh;
 }
 

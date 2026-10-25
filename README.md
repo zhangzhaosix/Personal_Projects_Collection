@@ -15,6 +15,8 @@ https://shine.is-a.dev/
 ## 项目概览
 
 - 首页展示个人信息、精选作品、最近标记的 3 条精选笔记和联系方式
+- 首页首屏沿用全站暖米色 UI，仅头像区域保留黑底暖金色，以圆角收边，保留附件原图的细密字符和明暗层次。桌面端头像居左、介绍居右，入场聚拢，鼠标划过产生扰动并在移开后归位；手机端头像在前，仅播放入场动画，不影响滑动浏览。开启系统“减少动态效果”时直接展示完整头像。
+- 全站导航栏处于正常文档流，随页面滚动离开视口，不固定悬浮。
 - 作品页支持分页、搜索、管理员增删改、项目类型选择/自定义、精选标记，以及职责、工具/方法和产出字段维护
 - 笔记页支持分页、搜索、管理员增删改和精选标记
 - 联系页集中展示邮箱和微信联系方式
@@ -59,6 +61,7 @@ https://shine.is-a.dev/
 ## 核心模块职责
 
 - `code/js/app.js`：首页渲染、精选作品、推荐笔记和联系方式
+- `code/js/ascii-avatar.js`：以 `code/assets/images/ascii-avatar.png` 原图的细小片段实现入场和鼠标交互，归位后完整绘制原图；静止、离开视口或页面隐藏时停止绘制，脚本不可用时保留原图，无第三方依赖
 - `code/js/works.js`：作品数据加载、筛选、分页、管理员 CRUD 和精选管理
 - `code/js/notes.js`：笔记数据加载、筛选、分页、管理员 CRUD、精选管理和图标匹配
 - `code/js/category.js`：作品分类页展示和管理
@@ -89,6 +92,7 @@ http://localhost:8000/
 node code/tests/notes-display.test.cjs
 node code/tests/publication.test.cjs
 node code/tests/works-category.test.cjs
+node code/tests/ascii-avatar.test.cjs
 ```
 
 ## 环境变量 / 配置
