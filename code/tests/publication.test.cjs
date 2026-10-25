@@ -60,6 +60,25 @@ test('发布服务未配置时不改动云端内容', async () => {
   finally { global.fetch = original; if (previousHook !== undefined) process.env.PORTFOLIO_DEPLOY_HOOK = previousHook; }
 });
 
+test('Firestore 返回字段顺序变化时不会误报未发布修改', async () => {
+  const original = global.fetch;
+  const reorder = value => Array.isArray(value) ? value.map(reorder) : value && typeof value === 'object'
+    ? Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reorder(item)])) : value;
+  const frozen = { version: deployed.version, publishedAt: deployed.publishedAt, data: reorder(publicData(source)) };
+  const draft = structuredClone(source);
+  global.fetch = async url => String(url).includes('accounts:lookup')
+    ? json({ users: [{ email: '1801327763@qq.com', localId: 'admin' }] })
+    : json(document({ ...draft, _publication: frozen }));
+  try {
+    const current = await call('GET');
+    assert.equal(current.statusCode, 200);
+    assert.equal(current.body.changed, false);
+    assert.equal(current.body.pending, false);
+    draft.categories[0].projects[0].name = '新的修改';
+    assert.equal((await call('GET')).body.changed, true);
+  } finally { global.fetch = original; }
+});
+
 test('点击发布冻结已保存内容，并返回等待上线而不是上线成功', async () => {
   const original = global.fetch;
   const previousHook = process.env.PORTFOLIO_DEPLOY_HOOK;

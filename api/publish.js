@@ -23,7 +23,7 @@ module.exports = async function publish(request, response) {
         version: previous?.version || deployed.version,
         publishedAt: previous?.publishedAt || deployed.publishedAt,
         pending: Boolean(previous && previous.version !== deployed.version),
-        changed: contentHash(data) !== contentHash(previous?.data || deployed.data),
+        changed: contentHash(data) !== contentHash(publicData(previous?.data || deployed.data)),
         configured: Boolean(process.env.PORTFOLIO_DEPLOY_HOOK)
       });
     }
