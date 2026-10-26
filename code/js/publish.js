@@ -49,7 +49,7 @@
         button.disabled = false;
         button.textContent = '发布';
         message(`已上线 · ${new Date(online.publishedAt).toLocaleString('zh-CN')}${savedDuringPublish ? '；另有已保存修改，需再次发布。' : ''}`);
-        globalThis.portfolioPublication = { version: online.version, publishedAt: online.publishedAt };
+        globalThis.portfolioPublication = online;
         return;
       }
     } catch {}

@@ -26,13 +26,44 @@ test('公开内容只保留作品和笔记字段，移除云端发布信息及�
   assert.throws(() => publicData({ categories: [] }), /不完整/);
 });
 
-test('普通访客读取本站快照，不初始化 Firebase', async () => {
-  const context = vm.createContext({ fetch: async (url) => { assert.equal(url, 'published.json'); return json(deployed); } });
+test('普通访客直接读取随脚本发布的快照，无网络也能切换页面和重复读取', async () => {
+  const context = vm.createContext({ fetch: () => { throw new Error('访客不应发起内容请求'); } });
   vm.runInContext(readFileSync(path.join(__dirname, '../js/firebase-portfolio.js'), 'utf8'), context);
   const result = await context.PortfolioFirebase.loadPortfolioData();
   assert.equal(result.ok, true);
   assert.ok(result.data.categories.length > 0);
+  assert.equal(context.portfolioPublication.version, deployed.version);
+  const firstName = result.data.categories[0].projects[0].name;
+  const featuredCount = result.data.featuredWorks.length;
+  result.data.categories[0].projects[0].name = '本地改动';
+  result.data.featuredWorks.push('本地精选');
+  const reloaded = await context.PortfolioFirebase.loadPortfolioData();
+  assert.equal(reloaded.data.categories[0].projects[0].name, firstName);
+  assert.equal(reloaded.data.featuredWorks.length, featuredCount);
   assert.equal(context.PortfolioFirebase.getAuthReady(), null);
+});
+
+test('内置快照损坏时显示加载失败，不连接云端或展示示例数据', async () => {
+  const context = vm.createContext({ fetch: () => { throw new Error('不应连接网络'); } });
+  const script = readFileSync(path.join(__dirname, '../js/firebase-portfolio.js'), 'utf8')
+    .replace(/\/\* published:start \*\/[^\r\n]*\/\* published:end \*\//, 'null');
+  vm.runInContext(script, context);
+  const result = await context.PortfolioFirebase.loadPortfolioData();
+  assert.equal(result.ok, false);
+  assert.match(result.error, /已发布内容加载失败/);
+});
+
+test('当前页面确认新版本上线后，重新读取使用新快照', async () => {
+  const context = vm.createContext({ fetch: () => { throw new Error('不应额外请求内容'); } });
+  vm.runInContext(readFileSync(path.join(__dirname, '../js/firebase-portfolio.js'), 'utf8'), context);
+  await context.PortfolioFirebase.loadPortfolioData();
+  const online = structuredClone(deployed);
+  online.version = 'newly-published';
+  online.data.categories[0].projects[0].name = '刚刚上线的项目';
+  context.portfolioPublication = online;
+  const result = await context.PortfolioFirebase.loadPortfolioData();
+  assert.equal(result.data.categories[0].projects[0].name, '刚刚上线的项目');
+  assert.equal(context.portfolioPublication.version, 'newly-published');
 });
 
 test('发布接口拒绝缺失登录凭据、跨域请求与无权限账号', async () => {
@@ -111,12 +142,19 @@ test('部署构建只导出冻结版本，不泄露之后保存的草稿', async
   const frozen = { version: 'frozen', publishedAt: '2026-10-25T00:00:00Z', data: publicData(source) };
   const draft = structuredClone(source); draft.categories[0].projects[0].name = '尚未发布的修改';
   global.fetch = async () => json(document({ ...draft, _publication: frozen }));
-  let written;
-  fs.writeFileSync = (_file, text) => { written = JSON.parse(text); };
+  const written = new Map();
+  fs.writeFileSync = (file, text) => { written.set(path.basename(file), text); };
   try {
     await build();
-    assert.equal(written.version, 'frozen');
-    assert.equal(written.data.categories[0].projects[0].name, '项目');
+    const snapshot = JSON.parse(written.get('published.json'));
+    assert.equal(snapshot.version, 'frozen');
+    assert.equal(snapshot.data.categories[0].projects[0].name, '项目');
+    const context = vm.createContext({});
+    vm.runInContext(written.get('firebase-portfolio.js'), context);
+    const result = await context.PortfolioFirebase.loadPortfolioData();
+    assert.equal(context.portfolioPublication.version, snapshot.version);
+    assert.equal(result.data.categories[0].projects[0].name, '项目');
+    assert.doesNotMatch(written.get('firebase-portfolio.js'), /尚未发布的修改/);
   } finally { global.fetch = originalFetch; fs.writeFileSync = originalWrite; }
 });
 
@@ -154,4 +192,18 @@ test('云端无法访问时构建失败，禁止悄悄发布旧内容', async ()
   global.fetch = async () => json({}, 503);
   try { await assert.rejects(build(), /读取云端内容失败/); }
   finally { global.fetch = original; }
+});
+
+test('快照信息或脚本构建标记缺失时不写入任何公开文件', () => {
+  const fs = require('node:fs');
+  const { writePublicFiles } = require('../../scripts/build.cjs');
+  const originalRead = fs.readFileSync, originalWrite = fs.writeFileSync;
+  let writes = 0;
+  fs.writeFileSync = () => { writes++; };
+  try {
+    assert.throws(() => writePublicFiles({ ...deployed, publishedAt: 'invalid' }), /发布版本信息不完整/);
+    fs.readFileSync = () => 'missing build markers';
+    assert.throws(() => writePublicFiles(deployed), /缺少构建标记/);
+    assert.equal(writes, 0);
+  } finally { fs.readFileSync = originalRead; fs.writeFileSync = originalWrite; }
 });

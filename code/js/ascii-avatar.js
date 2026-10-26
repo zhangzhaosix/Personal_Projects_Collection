@@ -7,7 +7,6 @@
   const portrait = canvas.parentElement;
   const image = portrait.querySelector('img');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const mouseInteraction = matchMedia('(min-width: 601px) and (hover: hover) and (pointer: fine)');
 
   try {
     await image.decode();
@@ -112,7 +111,7 @@
     }
 
     canvas.addEventListener('pointermove', (event) => {
-      if (event.pointerType !== 'mouse' || !mouseInteraction.matches || reducedMotion.matches) return;
+      if (event.pointerType !== 'mouse' || reducedMotion.matches) return;
       const bounds = canvas.getBoundingClientRect();
       pointer = {
         x: (event.clientX - bounds.left) * canvas.width / bounds.width,
@@ -124,7 +123,6 @@
     canvas.addEventListener('pointercancel', resetPointer);
     window.addEventListener('blur', resetPointer);
     reducedMotion.addEventListener('change', resetPointer);
-    mouseInteraction.addEventListener('change', resetPointer);
     document.addEventListener('visibilitychange', () => {
       cancelAnimationFrame(frame);
       frame = 0;

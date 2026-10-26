@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'ascii-avatar.js'), 'utf8');
 
-async function createPortrait({ reduced = false, desktop = true, fail = false } = {}) {
+async function createPortrait({ reduced = false, desktop = true, width = 1280, fail = false } = {}) {
   const frames = new Map();
   const events = {};
   const classes = new Set();
@@ -47,7 +47,8 @@ async function createPortrait({ reduced = false, desktop = true, fail = false } 
     document,
     window: { addEventListener: (name, callback) => { events[name] = callback; } },
     matchMedia: (query) => {
-      const result = { matches: query.includes('reduced-motion') ? reduced : desktop,
+      const minWidth = query.match(/min-width:\s*(\d+)px/);
+      const result = { matches: query.includes('reduced-motion') ? reduced : desktop && (!minWidth || width >= Number(minWidth[1])),
         addEventListener: (_, callback) => { result.change = callback; } };
       media.push(result);
       return result;
@@ -108,9 +109,21 @@ async function createPortrait({ reduced = false, desktop = true, fail = false } 
   const mobile = await createPortrait({ desktop: false });
   mobile.settle();
   mobile.events.pointermove({ pointerType: 'touch', clientX: 6, clientY: 75 });
-  mobile.events.pointermove({ pointerType: 'mouse', clientX: 6, clientY: 75 });
-  assert.equal(mobile.frames.size, 0, '手机端只播放入场动画');
+  assert.equal(mobile.frames.size, 0, '触摸操作不触发鼠标扰动');
   assert.equal(mobile.events.touchmove, undefined, '不拦截触摸滚动');
+
+  for (const portrait of [await createPortrait({ width: 390 }), mobile]) {
+    portrait.settle();
+    portrait.events.pointermove({ pointerType: 'mouse', clientX: 6, clientY: 15 });
+    assert.equal(portrait.frames.size, 1, '窄窗口和触摸设备接入鼠标后均应触发扰动');
+    const frame = Array.from(portrait.frames.values())[0];
+    portrait.frames.clear();
+    frame(3200);
+    assert.notEqual(JSON.stringify(portrait.draws), resting);
+    portrait.events.pointerleave();
+    portrait.settle();
+    assert.equal(JSON.stringify(portrait.draws), resting, '窄窗口鼠标移开后应归位');
+  }
 
   const reduced = await createPortrait({ reduced: true });
   reduced.settle();
