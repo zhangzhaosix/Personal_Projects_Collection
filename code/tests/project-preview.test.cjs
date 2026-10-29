@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../js/project-preview.js'), 'utf8');
 
-function loadPreview({ reduced = false, hover = true, pages, fixtures } = {}) {
+function loadPreview({ reduced = false, hover = true, dpr = 1, pages, fixtures } = {}) {
   const images = [];
   const animations = [];
   const closeEvents = [];
@@ -42,12 +42,18 @@ function loadPreview({ reduced = false, hover = true, pages, fixtures } = {}) {
       },
       setAttribute(name, value) { this.attributes[name] = value; },
       getAttribute(name) { return this.attributes[name] || null; },
-      removeAttribute(name) { delete this.attributes[name]; },
+      removeAttribute(name) { delete this.attributes[name]; if (name === 'src') this.sourceRemoved = true; },
       contains(other) { return this === other || this.children.includes(other); },
-      closest() { return this.dataset.projectPreview ? this : null; },
+      closest(selector) {
+        if (selector === 'button') return this.tagName === 'BUTTON' ? this : null;
+        if (selector.startsWith('.')) return this.className === selector.slice(1) ? this : null;
+        return this.dataset.projectPreview ? this : null;
+      },
       matches() { return true; },
-      replaceChildren(...children) { this.children = children; },
-      focus() {}, scrollTo() {}, hasPointerCapture() { return false; },
+      replaceChildren(...children) { this.children = children; children.forEach((child) => { child.parentElement = this; }); },
+      append(child) { this.children.push(child); child.parentElement = this; },
+      remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this); },
+      focus() {}, scrollTo() {}, hasPointerCapture() { return false; }, setPointerCapture() {},
       getBoundingClientRect() { return { left: 0, top: 0, width: this.clientWidth, height: this.clientHeight }; }
     };
   }
@@ -62,6 +68,8 @@ function loadPreview({ reduced = false, hover = true, pages, fixtures } = {}) {
       node.querySelector = (selector) => {
         if (!nodes.has(selector)) {
           const child = element();
+          if (selector.startsWith('.')) child.className = selector.slice(1);
+          if (selector.endsWith('-retry')) child.tagName = 'BUTTON';
           const zoom = selector.match(/data-preview-zoom="(\w+)"/);
           if (zoom) child.dataset.previewZoom = zoom[1];
           nodes.set(selector, child);
@@ -88,10 +96,10 @@ function loadPreview({ reduced = false, hover = true, pages, fixtures } = {}) {
     }
   };
   class Image {
-    constructor() { this.naturalWidth = 2000; this.naturalHeight = 1200; }
+    constructor() { Object.assign(this, element()); this.naturalWidth = 2000; this.naturalHeight = 1200; }
     set src(value) { this.url = value; images.push(this); }
   }
-  const window = { addEventListener() {} };
+  const window = { devicePixelRatio: dpr, addEventListener() {} };
   const context = vm.createContext({
     window, document, Image, ResizeObserver: class { observe() {} },
     matchMedia(query) { return { matches: query.includes('any-hover') ? hover : query.includes('reduced-motion') && reduced, addEventListener() {} }; },
@@ -146,7 +154,7 @@ test('悬浮只请求轻量局部图，移入小窗保持，点击仍打开完�
   assert.equal(app.peek.hidden, true);
   assert.equal(app.opener.getAttribute('aria-describedby'), null);
   assert.equal(app.dialog.open, true);
-  assert.match(app.images[1].url, /sheet-overview\.png$/);
+  assert.match(app.images[1].url, /sheet-overview\.webp$/);
   app.dialog.querySelector('.project-preview-close').emit('click');
   app.flushCloseEvents();
   app.document.emit('pointerover', { target: app.opener, pointerType: 'mouse' });
@@ -286,31 +294,34 @@ test('实际分析报告的21项页面与补充图均存在，逐页请求且保
     requested.push(path.basename(url));
   }
   assert.deepEqual(requested.filter((name) => name.startsWith('page-')),
-    Array.from({ length: 17 }, (_, index) => `page-${String(index + 1).padStart(2, '0')}.png`));
-  assert.equal(requested[2], 'summary-table.png');
-  assert.equal(requested[5], 'analysis-chart.png');
-  assert.equal(requested[12], 'chart-cost.png');
-  assert.equal(requested[17], 'chart-potential.png');
+    Array.from({ length: 17 }, (_, index) => `page-${String(index + 1).padStart(2, '0')}.webp`));
+  assert.equal(requested[2], 'summary-table.webp');
+  assert.equal(requested[5], 'analysis-chart.webp');
+  assert.equal(requested[12], 'chart-cost.webp');
+  assert.equal(requested[17], 'chart-potential.webp');
 });
 
 test('完整长思维导图初始按宽度展开，适应窗口回全图，100%回原始像素', () => {
   const app = loadPreview({ reduced: true });
   app.api.open('p_1780843960501_2nmq', app.opener);
   const image = app.images[0];
-  assert.match(image.url, /mindmap-complete\.png$/);
-  const png = fs.readFileSync(path.join(__dirname, '..', image.url));
-  image.naturalWidth = png.readUInt32BE(16);
-  image.naturalHeight = png.readUInt32BE(20);
+  assert.match(image.url, /mindmap-overview\.webp$/);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', image.url)));
+  for (let index = 0; index < 9; index += 1) {
+    assert.ok(fs.existsSync(path.join(__dirname, `../assets/previews/mindmap-detail/tile-${index}.webp`)));
+  }
+  image.naturalWidth = 800;
+  image.naturalHeight = 5304;
   image.onload();
   const stage = app.dialog.querySelector('.project-preview-stage');
   const viewer = app.dialog.querySelector('.project-preview-viewer');
   const getScale = () => Number(stage.style.transform.match(/scale\(([^)]+)\)/)[1]);
   const initialScale = getScale();
-  assert.equal(initialScale, Math.min(1, (viewer.clientWidth - 32) / image.naturalWidth));
+  assert.equal(initialScale, Math.min(1, (viewer.clientWidth - 32) / 2667));
   assert.match(stage.style.transform, /, 16px\)/);
   app.dialog.querySelector('[data-preview-zoom="fit"]').emit('click');
   assert.ok(getScale() < initialScale);
-  assert.ok(image.naturalHeight * getScale() <= viewer.clientHeight - 32);
+  assert.ok(17682 * getScale() <= viewer.clientHeight - 32);
   app.dialog.querySelector('[data-preview-zoom="native"]').emit('click');
   assert.equal(app.dialog.querySelector('.project-preview-scale').textContent, '100%');
 });
@@ -323,9 +334,8 @@ test('实际报告每页初始按宽度阅读，完整表格保持原像素且�
   const getScale = () => Number(stage.style.transform.match(/scale\(([^)]+)\)/)[1]);
   const readyImage = () => {
     const image = app.images.at(-1);
-    const png = fs.readFileSync(path.join(__dirname, '..', image.url));
-    image.naturalWidth = png.readUInt32BE(16);
-    image.naturalHeight = png.readUInt32BE(20);
+    const dimensions = image.url.endsWith('summary-table.webp') ? [876, 191] : [1656, 2339];
+    [image.naturalWidth, image.naturalHeight] = dimensions;
     image.onload();
     return image;
   };
@@ -340,9 +350,82 @@ test('实际报告每页初始按宽度阅读，完整表格保持原像素且�
   directory.value = '2';
   directory.emit('change');
   const table = readyImage();
-  assert.match(table.url, /summary-table\.png$/);
+  assert.match(table.url, /summary-table\.webp$/);
   assert.equal(getScale(), 1);
   assert.equal(stage.children[0], table);
   assert.equal(app.dialog.querySelector('.project-preview-hint').textContent,
     '拖拽移动 · 滚轮缩放 · 适应窗口查看全图');
+});
+
+function loadTiledPreview() {
+  const app = loadPreview({ reduced: true, fixtures: { map: {
+    title: 'Long map', file: 'map-overview.webp', initialFit: 'width',
+    detail: { width: 2000, height: 10000, tileHeight: 2048, folder: 'map-detail' }
+  } } });
+  app.api.open('map', app.opener);
+  const viewer = app.dialog.querySelector('.project-preview-viewer');
+  viewer.clientWidth = 400;
+  const base = app.images[0];
+  base.naturalWidth = 800;
+  base.naturalHeight = 4000;
+  base.onload();
+  return { app, viewer, base, stage: app.dialog.querySelector('.project-preview-stage') };
+}
+
+test('长图先只加载轻量全貌，100%保持原坐标并仅加载当前可见分片', () => {
+  const { app, base, stage } = loadTiledPreview();
+  assert.equal(app.images.length, 1);
+  assert.equal(stage.style.width, '2000px');
+  assert.equal(stage.style.height, '10000px');
+  assert.deepEqual(stage.children, [base]);
+  app.dialog.querySelector('[data-preview-zoom="native"]').emit('click');
+  assert.equal(app.dialog.querySelector('.project-preview-scale').textContent, '100%');
+  assert.equal(app.images.length, 2);
+  assert.match(app.images[1].url, /map-detail\/tile-0\.webp$/);
+  assert.equal(stage.children.length, 1);
+  app.images[1].onload();
+  assert.equal(stage.children.length, 2);
+  assert.equal(app.images[1].style.height, '2048px');
+});
+
+test('平移释放离屏高清分片，迟到回调不回填，缩回全图仅保留底图', () => {
+  const { app, viewer, stage, base } = loadTiledPreview();
+  app.dialog.querySelector('[data-preview-zoom="native"]').emit('click');
+  const first = app.images[1];
+  const lateLoad = first.onload;
+  viewer.emit('pointerdown', { target: viewer, pointerType: 'mouse', button: 0, pointerId: 1, clientX: 100, clientY: 100 });
+  viewer.emit('pointermove', { target: viewer, pointerId: 1, clientX: 100, clientY: -2300 });
+  assert.equal(first.sourceRemoved, true);
+  assert.match(app.images.at(-1).url, /map-detail\/tile-2\.webp$/);
+  lateLoad();
+  assert.deepEqual(stage.children, [base]);
+  app.images.at(-1).onload();
+  assert.equal(stage.children.length, 2);
+  viewer.emit('pointermove', { target: viewer, pointerId: 1, clientX: 100, clientY: -20000 });
+  assert.match(app.images.at(-1).url, /map-detail\/tile-4\.webp$/);
+  assert.equal(app.images.at(-1).style.height, '1808px');
+  app.dialog.querySelector('[data-preview-zoom="fit"]').emit('click');
+  assert.deepEqual(stage.children, [base]);
+  assert.equal(app.dialog.querySelector('.project-preview-detail-feedback').hidden, true);
+});
+
+test('高清分片失败保留整体图并可重试，关闭后旧请求不再覆盖新项目', () => {
+  const { app, viewer, stage, base } = loadTiledPreview();
+  app.dialog.querySelector('[data-preview-zoom="native"]').emit('click');
+  app.images[1].onerror();
+  assert.deepEqual(stage.children, [base]);
+  assert.equal(app.dialog.querySelector('.project-preview-detail-retry').hidden, false);
+  const press = viewer.emit('pointerdown', {
+    target: app.dialog.querySelector('.project-preview-detail-retry'), pointerType: 'touch'
+  });
+  assert.equal(press.defaultPrevented, false);
+  assert.match(app.dialog.querySelector('.project-preview-detail-message').textContent, /仍可查看整体图/);
+  app.dialog.querySelector('.project-preview-detail-retry').emit('click');
+  assert.equal(app.images.length, 3);
+  const lateLoad = app.images[2].onload;
+  app.dialog.querySelector('.project-preview-close').emit('click');
+  assert.equal(app.images[2].sourceRemoved, true);
+  app.flushCloseEvents();
+  lateLoad();
+  assert.equal(stage.children.length, 0);
 });

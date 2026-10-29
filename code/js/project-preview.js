@@ -6,13 +6,13 @@
     p_1780814882051_z593: {
       title: '电商数据治理与报表搭建',
       peek: 'sheet',
-      file: 'sheet-overview.png',
+      file: 'sheet-overview.webp',
       alt: '达人种草报表整体概览'
     },
     p_1780841238422_ic9b: {
       title: '电商种草数据监控与归因分析',
       peek: 'bi',
-      file: 'bi-overview.png',
+      file: 'bi-overview.webp',
       alt: '种草监控 BI 看板整体概览'
     },
     p_1780841697010_p9ip: {
@@ -20,33 +20,34 @@
       peek: 'analysis',
       initialFit: 'width',
       pages: [
-        { file: 'analysis-report/page-01.png', title: '种草核心结论', alt: '达人种草洞察分析报告封面、种草效果、竞品对比、待优化点与优化策略。' },
-        { file: 'analysis-report/page-02.png', title: '效果对比与数据洞察', alt: '核心结论总览、全链路数据对标及付费加热分析。' },
-        { file: 'analysis-report/summary-table.png', title: '全链路数据对比总览表', alt: '种草核心结论中的完整全链路数据对比总览表。' },
-        { file: 'analysis-report/page-03.png', title: '效率洞察与优质内容定义', alt: '无效种草率与规模效率对比，以及优质内容分析的重点赛道和筛选定义。' },
-        { file: 'analysis-report/page-04.png', title: '优质内容筛选与达人下钻', alt: '优质内容衡量、筛选标准、旅行和美女穿搭数据，以及 TOP 达人分析。' },
-        { file: 'analysis-chart.png', title: '优质内容完整图表', alt: '优质内容筛选部分的完整图表。' },
-        { file: 'analysis-report/page-05.png', title: '旅行达人内容分析', alt: '旅行达人 kkkkkisum 的转化表现、内容风格、成功原因与产品实用性表达优化建议，续至下一页。' },
-        { file: 'analysis-report/page-06.png', title: '旅行达人分析续页', alt: '旅行达人精准定位、高审美构图和产品展示分析，以及美女穿搭达人案例的开头。' },
-        { file: 'analysis-report/page-07.png', title: '美女穿搭达人内容分析', alt: '美女穿搭达人煜甜儿的风格、视频活力、审美价值、产品展示与动态视频优化建议。' },
-        { file: 'analysis-report/page-08.png', title: '优质内容策略总结', alt: '美女穿搭内容质感与种草适配分析续页，以及视觉美感建立停留、极端场景建立信任的策略总结。' },
-        { file: 'analysis-report/page-09.png', title: '内容策略与高性价比定义', alt: '颜控停留、功能可视化、情绪种草和动态叙事策略，以及高性价比达人业务定义。' },
-        { file: 'analysis-report/page-10.png', title: '高性价比筛选与达人分析', alt: '高性价比达人选择原因、筛选标准和黑皮 couple 案例开头。' },
-        { file: 'analysis-report/chart-cost.png', title: '高性价比达人完整图表', alt: '高性价比达人筛选部分的完整图表。' },
-        { file: 'analysis-report/page-11.png', title: '黑皮 couple 分析续页', alt: '黑皮 couple 的高难度动作、视觉记忆点、情绪价值与户外场景和情侣动作优化建议。' },
-        { file: 'analysis-report/page-12.png', title: '77在路上内容分析', alt: '77在路上的转化表现、风格与成功原因，以及服装环境反差、产品特写和植入效率优化建议。' },
-        { file: 'analysis-report/page-13.png', title: '高性价比达人策略总结', alt: '77在路上分析续页，以及保留原有内容模式、放大动作、升级场景和提高产品露出效率的策略总结。' },
-        { file: 'analysis-report/page-14.png', title: '潜力股达人定义与筛选', alt: '潜力股达人业务定义、衡量方式、粉丝量级、转化率、每千人转化成本标准与标杆达人。' },
-        { file: 'analysis-report/chart-potential.png', title: '潜力股达人完整图表', alt: '潜力股达人筛选部分的完整图表。' },
-        { file: 'analysis-report/page-15.png', title: '潜力股达人 kkkkkisum', alt: 'kkkkkisum 的粉丝数、转化效率、氛围感内容优势与高光画面、动态细节和场景转场优化建议。' },
-        { file: 'analysis-report/page-16.png', title: '潜力股达人 Soii', alt: 'kkkkkisum 案例结尾，以及 Soii 的转化效率、场景表达、成功原因与场景动机和轻量功能表达优化建议。' },
-        { file: 'analysis-report/page-17.png', title: '潜力股达人最终策略总结', alt: 'Soii 案例结尾和原报告最终策略总结，包含高光画面前置、静态内容补动态细节、场景转场升级、场景动机补强及功能细节轻量露出。' }
+        { file: 'analysis-report/page-01.webp', title: '种草核心结论', alt: '达人种草洞察分析报告封面、种草效果、竞品对比、待优化点与优化策略。' },
+        { file: 'analysis-report/page-02.webp', title: '效果对比与数据洞察', alt: '核心结论总览、全链路数据对标及付费加热分析。' },
+        { file: 'analysis-report/summary-table.webp', title: '全链路数据对比总览表', alt: '种草核心结论中的完整全链路数据对比总览表。' },
+        { file: 'analysis-report/page-03.webp', title: '效率洞察与优质内容定义', alt: '无效种草率与规模效率对比，以及优质内容分析的重点赛道和筛选定义。' },
+        { file: 'analysis-report/page-04.webp', title: '优质内容筛选与达人下钻', alt: '优质内容衡量、筛选标准、旅行和美女穿搭数据，以及 TOP 达人分析。' },
+        { file: 'analysis-chart.webp', title: '优质内容完整图表', alt: '优质内容筛选部分的完整图表。' },
+        { file: 'analysis-report/page-05.webp', title: '旅行达人内容分析', alt: '旅行达人 kkkkkisum 的转化表现、内容风格、成功原因与产品实用性表达优化建议，续至下一页。' },
+        { file: 'analysis-report/page-06.webp', title: '旅行达人分析续页', alt: '旅行达人精准定位、高审美构图和产品展示分析，以及美女穿搭达人案例的开头。' },
+        { file: 'analysis-report/page-07.webp', title: '美女穿搭达人内容分析', alt: '美女穿搭达人煜甜儿的风格、视频活力、审美价值、产品展示与动态视频优化建议。' },
+        { file: 'analysis-report/page-08.webp', title: '优质内容策略总结', alt: '美女穿搭内容质感与种草适配分析续页，以及视觉美感建立停留、极端场景建立信任的策略总结。' },
+        { file: 'analysis-report/page-09.webp', title: '内容策略与高性价比定义', alt: '颜控停留、功能可视化、情绪种草和动态叙事策略，以及高性价比达人业务定义。' },
+        { file: 'analysis-report/page-10.webp', title: '高性价比筛选与达人分析', alt: '高性价比达人选择原因、筛选标准和黑皮 couple 案例开头。' },
+        { file: 'analysis-report/chart-cost.webp', title: '高性价比达人完整图表', alt: '高性价比达人筛选部分的完整图表。' },
+        { file: 'analysis-report/page-11.webp', title: '黑皮 couple 分析续页', alt: '黑皮 couple 的高难度动作、视觉记忆点、情绪价值与户外场景和情侣动作优化建议。' },
+        { file: 'analysis-report/page-12.webp', title: '77在路上内容分析', alt: '77在路上的转化表现、风格与成功原因，以及服装环境反差、产品特写和植入效率优化建议。' },
+        { file: 'analysis-report/page-13.webp', title: '高性价比达人策略总结', alt: '77在路上分析续页，以及保留原有内容模式、放大动作、升级场景和提高产品露出效率的策略总结。' },
+        { file: 'analysis-report/page-14.webp', title: '潜力股达人定义与筛选', alt: '潜力股达人业务定义、衡量方式、粉丝量级、转化率、每千人转化成本标准与标杆达人。' },
+        { file: 'analysis-report/chart-potential.webp', title: '潜力股达人完整图表', alt: '潜力股达人筛选部分的完整图表。' },
+        { file: 'analysis-report/page-15.webp', title: '潜力股达人 kkkkkisum', alt: 'kkkkkisum 的粉丝数、转化效率、氛围感内容优势与高光画面、动态细节和场景转场优化建议。' },
+        { file: 'analysis-report/page-16.webp', title: '潜力股达人 Soii', alt: 'kkkkkisum 案例结尾，以及 Soii 的转化效率、场景表达、成功原因与场景动机和轻量功能表达优化建议。' },
+        { file: 'analysis-report/page-17.webp', title: '潜力股达人最终策略总结', alt: 'Soii 案例结尾和原报告最终策略总结，包含高光画面前置、静态内容补动态细节、场景转场升级、场景动机补强及功能细节轻量露出。' }
       ]
     },
     p_1780843960501_2nmq: {
       title: '抖音电商直播用户行为分析',
       peek: 'mindmap',
-      file: 'mindmap-complete.png',
+      file: 'mindmap-overview.webp',
+      detail: { width: 2667, height: 17682, tileHeight: 2048, folder: 'mindmap-detail' },
       alt: '直播用户行为分析完整思维导图。',
       initialFit: 'width'
     }
@@ -66,6 +67,12 @@
   let previousPage;
   let nextPage;
   let activeImage;
+  let imageWidth;
+  let imageHeight;
+  let detailFeedback;
+  let detailMessage;
+  let detailRetry;
+  const detailTiles = new Map();
   let scale = 1;
   let offsetX = 0;
   let offsetY = 0;
@@ -179,13 +186,82 @@
 
   function fitScale(width = viewer.clientWidth, height = viewer.clientHeight) {
     return Math.min(1,
-      Math.max(1, width - padding * 2) / activeImage.naturalWidth,
-      Math.max(1, height - padding * 2) / activeImage.naturalHeight);
+      Math.max(1, width - padding * 2) / imageWidth,
+      Math.max(1, height - padding * 2) / imageHeight);
+  }
+
+  function clearDetails() {
+    detailTiles.forEach(({ image }) => {
+      image.onload = null;
+      image.onerror = null;
+      image.remove();
+      image.removeAttribute('src');
+    });
+    detailTiles.clear();
+    if (detailFeedback) detailFeedback.hidden = true;
+  }
+
+  function updateDetailFeedback() {
+    const tiles = [...detailTiles.values()];
+    const failed = tiles.some((tile) => tile.failed);
+    detailFeedback.hidden = !tiles.some((tile) => !tile.ready);
+    detailMessage.textContent = failed
+      ? '高清细节加载失败，仍可查看整体图。'
+      : '正在加载高清细节…';
+    detailRetry.hidden = !failed;
+  }
+
+  function updateDetails() {
+    const detail = activePages[pageIndex].detail;
+    if (!detail || !activeImage || !dialog.open || dialog.classList.contains('is-closing') ||
+        scale * (window.devicePixelRatio || 1) <= activeImage.naturalWidth / imageWidth) {
+      clearDetails();
+      return;
+    }
+    const count = Math.ceil(imageHeight / detail.tileHeight);
+    const first = Math.max(0, Math.floor(-offsetY / scale / detail.tileHeight));
+    const last = Math.min(count - 1, Math.floor(((viewer.clientHeight - offsetY) / scale - 0.001) / detail.tileHeight));
+    detailTiles.forEach((tile, index) => {
+      if (index >= first && index <= last) return;
+      tile.image.onload = null;
+      tile.image.onerror = null;
+      tile.image.remove();
+      tile.image.removeAttribute('src');
+      detailTiles.delete(index);
+    });
+    for (let index = first; index <= last; index += 1) {
+      if (detailTiles.has(index)) continue;
+      const image = new Image();
+      const tile = { image, ready: false, failed: false };
+      const requestId = loadId;
+      detailTiles.set(index, tile);
+      image.alt = '';
+      image.setAttribute('aria-hidden', 'true');
+      image.className = 'project-preview-detail';
+      image.decoding = 'async';
+      image.draggable = false;
+      image.style.top = `${index * detail.tileHeight}px`;
+      image.style.width = `${imageWidth}px`;
+      image.style.height = `${Math.min(detail.tileHeight, imageHeight - index * detail.tileHeight)}px`;
+      image.onload = () => {
+        if (requestId !== loadId || detailTiles.get(index) !== tile || !dialog.open) return;
+        tile.ready = true;
+        stage.append(image);
+        updateDetailFeedback();
+      };
+      image.onerror = () => {
+        if (requestId !== loadId || detailTiles.get(index) !== tile || !dialog.open) return;
+        tile.failed = true;
+        updateDetailFeedback();
+      };
+      image.src = `assets/previews/${detail.folder}/tile-${index}.webp`;
+    }
+    updateDetailFeedback();
   }
 
   function render() {
-    const width = activeImage.naturalWidth * scale;
-    const height = activeImage.naturalHeight * scale;
+    const width = imageWidth * scale;
+    const height = imageHeight * scale;
     offsetX = width <= viewer.clientWidth - padding * 2
       ? (viewer.clientWidth - width) / 2
       : Math.min(padding, Math.max(viewer.clientWidth - width - padding, offsetX));
@@ -196,6 +272,7 @@
     zoomLabel.textContent = `${Math.round(scale * 100)}%`;
     dialog.querySelector('[data-preview-zoom="in"]').disabled = scale >= maxScale;
     dialog.querySelector('[data-preview-zoom="out"]').disabled = scale <= Math.min(0.1, fitScale());
+    updateDetails();
   }
 
   function zoomAt(value, x = viewer.clientWidth / 2, y = viewer.clientHeight / 2) {
@@ -211,10 +288,10 @@
   function fitImage(widthOnly = false) {
     if (!activeImage) return;
     scale = widthOnly
-      ? Math.min(1, Math.max(1, viewer.clientWidth - padding * 2) / activeImage.naturalWidth)
+      ? Math.min(1, Math.max(1, viewer.clientWidth - padding * 2) / imageWidth)
       : fitScale();
-    offsetX = (viewer.clientWidth - activeImage.naturalWidth * scale) / 2;
-    offsetY = widthOnly ? padding : (viewer.clientHeight - activeImage.naturalHeight * scale) / 2;
+    offsetX = (viewer.clientWidth - imageWidth * scale) / 2;
+    offsetY = widthOnly ? padding : (viewer.clientHeight - imageHeight * scale) / 2;
     render();
   }
 
@@ -266,6 +343,7 @@
     if (!dialog.open || dialog.classList.contains('is-closing')) return;
     const id = ++motionId;
     ++loadId;
+    clearDetails();
     clearPointers();
     const current = getComputedStyle(dialog);
     const from = { opacity: current.opacity, transform: current.transform };
@@ -300,6 +378,7 @@
     const requestId = ++loadId;
     const page = activePages[pageIndex];
     const image = new Image();
+    clearDetails();
     clearPointers();
     viewer.scrollTo(0, 0);
     activeImage = null;
@@ -318,8 +397,10 @@
     image.onload = () => {
       if (requestId !== loadId || !dialog.open) return;
       activeImage = image;
-      stage.style.width = `${image.naturalWidth}px`;
-      stage.style.height = `${image.naturalHeight}px`;
+      imageWidth = page.detail?.width || image.naturalWidth;
+      imageHeight = page.detail?.height || image.naturalHeight;
+      stage.style.width = `${imageWidth}px`;
+      stage.style.height = `${imageHeight}px`;
       stage.replaceChildren(image);
       stage.hidden = false;
       status.hidden = true;
@@ -370,6 +451,10 @@
         <div class="project-preview-stage" hidden></div>
         <p class="project-preview-status" role="status"></p>
         <button class="project-preview-retry" type="button" hidden>重新加载</button>
+        <div class="project-preview-detail-feedback" role="status" hidden>
+          <span class="project-preview-detail-message"></span>
+          <button class="project-preview-detail-retry" type="button" hidden>重试高清细节</button>
+        </div>
       </div>
       <p class="project-preview-hint" id="projectPreviewHint">拖动移动 · 滚轮缩放 · 100% 查看原始像素</p>`;
     document.body.append(dialog);
@@ -377,6 +462,9 @@
     stage = dialog.querySelector('.project-preview-stage');
     status = dialog.querySelector('.project-preview-status');
     retry = dialog.querySelector('.project-preview-retry');
+    detailFeedback = dialog.querySelector('.project-preview-detail-feedback');
+    detailMessage = dialog.querySelector('.project-preview-detail-message');
+    detailRetry = dialog.querySelector('.project-preview-detail-retry');
     zoomLabel = dialog.querySelector('.project-preview-scale');
     pageSelect = dialog.querySelector('.project-preview-page-select');
     pageCounter = dialog.querySelector('.project-preview-page-count');
@@ -389,6 +477,12 @@
       requestClose();
     });
     retry.addEventListener('click', loadImage);
+    detailRetry.addEventListener('click', () => {
+      detailTiles.forEach((tile, index) => {
+        if (tile.failed) detailTiles.delete(index);
+      });
+      updateDetails();
+    });
     pageSelect.addEventListener('change', () => showPage(Number(pageSelect.value)));
     previousPage.addEventListener('click', () => showPage(pageIndex - 1));
     nextPage.addEventListener('click', () => showPage(pageIndex + 1));
@@ -410,6 +504,7 @@
       zoomAt(scale * Math.exp(-event.deltaY * unit * 0.0015), point.x, point.y);
     }, { passive: false });
     viewer.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('button')) return;
       if (!activeImage || (event.pointerType === 'mouse' && event.button !== 0)) return;
       event.preventDefault();
       viewer.focus({ preventScroll: true });
@@ -486,6 +581,7 @@
       cancelShellAnimation();
       dialog.classList.remove('is-closing');
       ++loadId;
+      clearDetails();
       clearPointers();
       activeImage = null;
       stage.replaceChildren();

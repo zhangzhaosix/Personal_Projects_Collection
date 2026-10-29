@@ -17,6 +17,7 @@
   display: grid;
   place-items: center;
   aspect-ratio: 800 / 468;
+  max-height: calc(100vh - 76px);
   max-height: calc(100dvh - 76px);
   overflow: hidden;
   border-radius: 7px;
@@ -49,8 +50,10 @@ html.project-preview-open {
 
 .project-preview {
   width: min(1120px, calc(100% - 48px));
+  height: min(88vh, 940px);
   height: min(88dvh, 940px);
   max-width: none;
+  max-height: min(88vh, 1100px);
   max-height: min(88dvh, 1100px);
   padding: 0;
   margin: auto;
@@ -266,6 +269,26 @@ html.project-preview-open {
   user-select: none;
 }
 
+.project-preview-stage .project-preview-detail {
+  position: absolute;
+  left: 0;
+}
+
+.project-preview-detail-feedback {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--text-secondary, #71685F);
+  background: var(--bg-card, #FFFDF8);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .project-preview-status {
   max-width: 38ch;
   margin: 60px auto 16px;
@@ -293,7 +316,9 @@ html.project-preview-open {
 @media (max-width: 640px) {
   .project-preview {
     width: calc(100% - 20px);
+    height: 92vh;
     height: 92dvh;
+    max-height: 92vh;
     max-height: 92dvh;
     border-radius: 12px;
   }
@@ -337,7 +362,7 @@ html.project-preview-open {
 }
 
 @media (max-height: 600px) {
-  .project-preview { max-height: calc(100dvh - 16px); }
+  .project-preview { max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
   .project-preview-viewer { min-height: 0; }
 }
 
