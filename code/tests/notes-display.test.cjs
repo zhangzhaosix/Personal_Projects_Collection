@@ -26,14 +26,15 @@ function createHomeHarness() {
           return value
             .replaceAll('&', '&amp;')
             .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;');
+            .replaceAll('>', '&gt;');
         }
       };
     }
   };
   const context = vm.createContext({
     document,
+    window: { ProjectPreview: { has: (id) => id === 'selected' } },
+    URL,
     localStorage: { getItem() { return null; }, setItem() {} },
     location: { protocol: 'file:' },
     requestAnimationFrame() {},
@@ -65,16 +66,22 @@ function testFeaturedProjects() {
     featuredWorks: ['selected'],
     categories: [{ name: '数据分析项目', projects: [
       { id: 'normal', name: '普通项目', url: 'https://example.com/normal' },
-      { id: 'selected', name: '精选项目', description: '节省约 50 万元无效投放。', url: 'https://example.com/selected' }
+      { id: 'selected', name: '精选项目 "A" onclick="alert(1)', description: '节省约 50 万元无效投放。', url: 'https://example.com/selected' }
     ] }]
   });
   context.renderFeaturedProjects();
   assert.ok(featuredSection.innerHTML.includes('精选项目'));
-  assert.equal(featuredSection.innerHTML.includes('普通项目'), false);
+  assert.ok(featuredSection.innerHTML.includes('普通项目'), '首页并列展示全部实际项目');
   assert.match(featuredSection.innerHTML, /<strong>约 50 万元<\/strong>/);
-  assert.match(featuredSection.innerHTML, /href="works.html" class="featured-all-link"/);
   assert.match(featuredSection.innerHTML, /href="https:\/\/example.com\/selected" target="_blank" rel="noopener"/);
-  assert.doesNotMatch(featuredSection.innerHTML, /featured-category|↗|产出/);
+  assert.match(featuredSection.innerHTML, /data-project-preview="selected"/);
+  assert.match(featuredSection.innerHTML, /aria-label="预览精选项目 &quot;A&quot; onclick=&quot;alert\(1\)成果"/, '可编辑项目名在属性中安全转义');
+  assert.doesNotMatch(featuredSection.innerHTML, / onclick="/);
+  context.setPortfolioData({ categories: [{ id: 'ai-learning', projects: [{ name: '笔记中的AI资料' }] }, { id: 'vibe', name: 'Vibe Coding', projects: [{ id: 'vibe-1', name: '日常清单', role: '/', tools: '/', outcome: '/', url: 'javascript:alert(1)', description: '<img src=x>' }] }] });
+  context.renderFeaturedProjects();
+  assert.doesNotMatch(featuredSection.innerHTML, /笔记中的AI资料|javascript:|<img/);
+  assert.match(featuredSection.innerHTML, /日常清单/);
+  assert.doesNotMatch(featuredSection.innerHTML, /<dt>/, '不展示占位的职责、方法与产出');
 
   context.setPortfolioData({ categories: [{ projects: [{ name: '抖音电商直播用户行为分析', url: 'https://example.com/live' }] }] });
   context.renderFeaturedProjects();
@@ -84,7 +91,7 @@ function testFeaturedProjects() {
   assert.equal(featuredSection.style.display, 'none');
 }
 
-function testRecentFeaturedNotes() {
+function testAllHomeNotes() {
   const { context, notesSection } = createHomeHarness();
   context.setPortfolioData({
     featuredNotes: ['old-1', 'old-2', 'old-3', 'new-4'],
@@ -98,21 +105,22 @@ function testRecentFeaturedNotes() {
   });
   context.renderNotes();
 
-  const expected = ['最近精选', '第三条精选', '第二条精选'];
+  const expected = ['最早精选', '普通笔记', '第二条精选', '第三条精选', '最近精选'];
   const positions = expected.map((title) => notesSection.innerHTML.indexOf(title));
-  assert.ok(positions.every((position) => position >= 0), '应展示最近标记的三条精选笔记');
-  assert.ok(positions[0] < positions[1] && positions[1] < positions[2], '精选笔记应按最近标记优先排序');
-  assert.equal(notesSection.innerHTML.includes('最早精选'), false, '不应保留最早的第四条精选笔记');
-  assert.equal(notesSection.innerHTML.includes('普通笔记'), false, '不应混入普通笔记');
+  assert.ok(positions.every((position) => position >= 0), '首页展示全部笔记');
+  assert.ok(positions.every((position, index) => !index || position > positions[index - 1]), '保持内容原顺序');
   assert.doesNotMatch(notesSection.innerHTML, /note-preview-meta|2026-06-12/, '首页推荐笔记不显示日期');
-  assert.match(notesSection.innerHTML, /href="notes.html" class="notes-all-link"/);
+  assert.doesNotMatch(notesSection.innerHTML, /href="notes.html"/);
 }
 
 function testEmptyFeaturedNotes() {
   const { context, notesSection } = createHomeHarness();
   context.setPortfolioData({ featuredNotes: ['missing'], notes: [{ id: 'normal', title: '普通笔记' }] });
   context.renderNotes();
-  assert.equal(notesSection.style.display, 'none', '没有有效精选笔记时应隐藏模块');
+  assert.match(notesSection.innerHTML, /普通笔记/, '不依赖精选标记展示笔记');
+  context.setPortfolioData({ notes: [] });
+  context.renderNotes();
+  assert.equal(notesSection.style.display, 'none', '没有笔记时隐藏模块');
 }
 
 function testOriginalNoteIcons() {
@@ -144,7 +152,7 @@ function testPaginationAndFooterMarkup() {
 
 testFeaturedMetricEscaping();
 testFeaturedProjects();
-testRecentFeaturedNotes();
+testAllHomeNotes();
 testEmptyFeaturedNotes();
 testOriginalNoteIcons();
 testPaginationAndFooterMarkup();

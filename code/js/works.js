@@ -3,7 +3,6 @@
    ============================================ */
 
 let allProjects = [];
-let filteredProjects = [];
 let portfolioData = null;
 let currentPage = 1;
 let isAdminMode = false;
@@ -427,17 +426,7 @@ async function toggleFeatured(projectId, isFeatured) {
 }
 
 /* --- Rendering --- */
-function applyFilters() {
-  const query = (document.getElementById('worksSearchInput')?.value || '').trim().toLowerCase();
-  filteredProjects = allProjects.filter((p) => {
-    if (query) {
-      const name = (p.name || '').toLowerCase();
-      const desc = (p.description || '').toLowerCase();
-      const evidence = [p.role, p.tools, p.outcome].filter(Boolean).join(' ').toLowerCase();
-      if (!name.includes(query) && !desc.includes(query) && !evidence.includes(query)) return false;
-    }
-    return true;
-  });
+function renderAll() {
   renderProjects();
   renderPagination();
 }
@@ -476,10 +465,10 @@ function renderProjects() {
 
   const start = (currentPage - 1) * PAGE_SIZE;
   const end = start + PAGE_SIZE;
-  const pageProjects = filteredProjects.slice(start, end);
+  const pageProjects = allProjects.slice(start, end);
 
-  if (!filteredProjects.length) {
-    grid.innerHTML = '<div class="empty-state fade-in"><span class="empty-icon">🔍</span><p>暂无匹配作品</p></div>';
+  if (!allProjects.length) {
+    grid.innerHTML = '<div class="empty-state fade-in"><p>暂无作品，敬请期待。</p></div>';
     return;
   }
 
@@ -520,8 +509,10 @@ function renderProjects() {
         ${!isAdminMode ? `
           <div class="card-footer">
             ${safeUrl
-              ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">查看作品<span class="project-link-arrow">→</span></a>`
+              ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">查看完整项目<span class="project-link-arrow">→</span></a>`
               : '<span class="project-link-btn project-link-btn-disabled" aria-disabled="true">暂无公开链接</span>'}
+            ${window.ProjectPreview?.has(project.id) ? `<button type="button" class="project-link-btn project-preview-trigger" data-project-preview="${escapeHtml(project.id)}">预览成果</button>` : ''}
+            ${requiresProjectAccess(safeUrl) ? '<p class="project-access-note">完整项目需申请访问权限</p>' : ''}
           </div>
         ` : ''}
       </div>
@@ -538,7 +529,7 @@ function renderProjects() {
 function renderPagination() {
   const container = document.getElementById('worksPagination');
   if (!container) return;
-  const totalPages = Math.ceil(filteredProjects.length / PAGE_SIZE);
+  const totalPages = Math.ceil(allProjects.length / PAGE_SIZE);
   if (totalPages <= 1) { container.innerHTML = ''; return; }
 
   let html = `<span class="page-btn${currentPage === 1 ? ' disabled' : ''}" data-page="${currentPage - 1}">← 上一页</span>`;
@@ -564,20 +555,10 @@ function renderPagination() {
       const page = parseInt(btn.dataset.page, 10);
       if (page >= 1 && page <= totalPages) {
         currentPage = page;
-        applyFilters();
+        renderAll();
         document.getElementById('worksGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
-  });
-}
-
-function initSearch() {
-  const input = document.getElementById('worksSearchInput');
-  if (!input) return;
-  let timer;
-  input.addEventListener('input', () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { currentPage = 1; applyFilters(); }, 300);
   });
 }
 
@@ -593,9 +574,8 @@ async function reloadData() {
   if (!result.ok) return false;
   portfolioData = result.data;
   allProjects = collectWorkProjects(portfolioData);
-  filteredProjects = [...allProjects];
   currentPage = 1;
-  applyFilters();
+  renderAll();
   return true;
 }
 
@@ -611,9 +591,7 @@ async function bootstrapWorks() {
 
   portfolioData = dataResult.data;
   allProjects = collectWorkProjects(portfolioData);
-  filteredProjects = [...allProjects];
-  applyFilters();
-  initSearch();
+  renderAll();
 }
 
 // Expose globals for HTML onclick

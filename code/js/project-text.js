@@ -6,3 +6,13 @@ function formatProjectDescription(value) {
     '<strong>$&</strong>'
   );
 }
+
+function requiresProjectAccess(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) &&
+      ['feishu.cn', 'larksuite.com'].some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
+  } catch {
+    return false;
+  }
+}

@@ -5,19 +5,7 @@
 let portfolioData = null;
 
 function initScrollReveal() {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-  );
-
-  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+  window.HomeMotion?.initSections();
 }
 
 function initTypewriter() {
@@ -33,55 +21,83 @@ function initTypewriter() {
     '行动治愈焦虑'
   ];
 
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const wrapper = document.querySelector('.typewriter-wrapper');
   let phraseIdx = 0;
-  let charIdx = 0;
+  let charIdx = phrases[0].length;
   let isDeleting = false;
+  let timer = 0;
+  let inView = true;
+  let firstPause = true;
 
-  function tick() {
-    const current = phrases[phraseIdx];
-
-    if (!isDeleting) {
-      charIdx += 1;
-      el.textContent = current.slice(0, charIdx);
-
-      if (charIdx === current.length) {
-        setTimeout(() => {
-          isDeleting = true;
-          tick();
-        }, 2200);
-        return;
-      }
-
-      setTimeout(tick, 80 + Math.random() * 60);
-      return;
-    }
-
-    charIdx -= 1;
-    el.textContent = current.slice(0, charIdx);
-
-    if (charIdx === 0) {
-      isDeleting = false;
-      phraseIdx = (phraseIdx + 1) % phrases.length;
-      setTimeout(tick, 400);
-      return;
-    }
-
-    setTimeout(tick, 30 + Math.random() * 30);
+  function schedule(delay) {
+    clearTimeout(timer);
+    timer = 0;
+    if (!motion.matches && !document.hidden && inView) timer = setTimeout(tick, delay);
   }
 
-  setTimeout(tick, 600);
+  function tick() {
+    timer = 0;
+    if (motion.matches || document.hidden || !inView) return;
+    firstPause = false;
+    const current = phrases[phraseIdx];
+    if (isDeleting) {
+      charIdx -= 1;
+      el.textContent = current.slice(0, charIdx);
+      if (charIdx === 0) {
+        isDeleting = false;
+        phraseIdx = (phraseIdx + 1) % phrases.length;
+        schedule(400);
+      } else schedule(30 + Math.random() * 30);
+    } else if (charIdx < current.length) {
+      charIdx += 1;
+      el.textContent = current.slice(0, charIdx);
+      schedule(charIdx === current.length ? 2200 : 80 + Math.random() * 60);
+    } else {
+      isDeleting = true;
+      schedule(60);
+    }
+  }
+
+  function sync() {
+    if (motion.matches) {
+      phraseIdx = 0;
+      charIdx = phrases[0].length;
+      isDeleting = false;
+      el.textContent = phrases[0];
+    }
+    wrapper?.classList.toggle('is-typewriter-paused', motion.matches || document.hidden || !inView);
+    schedule(firstPause ? 3000 : 400);
+  }
+
+  motion.addEventListener('change', sync);
+  document.addEventListener('visibilitychange', sync);
+  if ('IntersectionObserver' in window && wrapper) {
+    new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      sync();
+    }).observe(wrapper);
+  }
+  el.textContent = phrases[0];
+  schedule(3000);
 }
 
 function escapeHtml(value) {
   const div = document.createElement('div');
   div.textContent = value || '';
-  return div.innerHTML;
+  return div.innerHTML.replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 
 function escapeUrl(value) {
-  if (!value) return '#';
-  if (value.startsWith('http://') || value.startsWith('https://')) return value;
-  return `https://${value}`;
+  const candidate = String(value || '').trim();
+  if (!candidate) return '';
+  const url = /^[a-z][a-z\d+.-]*:/i.test(candidate) ? candidate : `https://${candidate}`;
+  try {
+    const parsed = new URL(url);
+    return ['https:', 'http:'].includes(parsed.protocol) ? parsed.href : '';
+  } catch {
+    return '';
+  }
 }
 
 function renderHomeError(message) {
@@ -101,74 +117,45 @@ function renderHomeError(message) {
   `;
 }
 
-const WORK_NAMES_FALLBACK = [
-  '【抖音 达人种草 数据分析 自动化报表】',
-  '【抖音电商 数据监控 BI看板】',
-  '电商 达人种草 洞察分析 报告',
-  '抖音 电商直播 用户行为 分析',
-  '抖音电商直播用户行为分析',
-  '日常清单网页',
-  '作品集网页',
-  '音乐合集'
-];
-
 function renderFeaturedProjects() {
   const el = document.getElementById('featuredSection');
   if (!el || !portfolioData) return;
 
-  const featuredIds = Array.isArray(portfolioData.featuredWorks) ? portfolioData.featuredWorks : [];
-  const featured = [];
-
-  if (featuredIds.length && Array.isArray(portfolioData.categories)) {
-    portfolioData.categories.forEach((category) => {
-      if (!Array.isArray(category.projects)) return;
-      category.projects.forEach((project) => {
-        if (featuredIds.includes(project.id)) {
-          featured.push(project);
-        }
-      });
-    });
-  }
-
-  // Fallback: no featured selected yet, show first 2 works
-  if (!featured.length && Array.isArray(portfolioData.categories)) {
-    for (const category of portfolioData.categories) {
-      if (!Array.isArray(category.projects)) continue;
-      for (const project of category.projects) {
-        if (featured.length >= 2) break;
-        if (WORK_NAMES_FALLBACK.includes(project.name)) {
-          featured.push(project);
-        }
-      }
-      if (featured.length >= 2) break;
-    }
-  }
-
-  if (!featured.length) {
+  // AI 学习资料已在笔记目录展示，作品区保留实际项目。
+  const categories = (Array.isArray(portfolioData.categories) ? portfolioData.categories : [])
+    .filter((category) => category.id !== 'ai-learning' && Array.isArray(category.projects) && category.projects.length);
+  if (!categories.length) {
     el.style.display = 'none';
     return;
   }
 
   el.style.display = '';
   el.innerHTML = `
-    <div class="featured-inner">
-      <div class="featured-header">
-        <h2 class="featured-heading">精选作品</h2>
-        <a href="works.html" class="featured-all-link">查看全部作品 →</a>
-      </div>
-      <div class="featured-grid">
-        ${featured
-          .map(
-            (project) => `
-              <a class="featured-card" href="${escapeUrl(project.url)}" target="_blank" rel="noopener">
-                <h3 class="featured-name">${escapeHtml(project.name)}</h3>
-                <p class="featured-desc">${formatProjectDescription(project.description)}</p>
-              </a>
-            `
-          )
-          .join('')}
-      </div>
+    <div class="home-section-heading reveal">
+      <h2 id="worksHeading">作品</h2>
+      <span>从业务问题到方法与产出</span>
     </div>
+    ${categories.map((category) => `
+      <div class="home-project-group">
+        <h3 class="home-project-category reveal">${escapeHtml(category.name)}</h3>
+        <div class="home-project-grid">
+          ${category.projects.map((project) => {
+            const href = escapeUrl(project.url);
+            const fields = [['职责', project.role], ['方法', project.tools], ['产出', project.outcome]]
+              .filter(([, value]) => value && value.trim() !== '/');
+            const preview = window.ProjectPreview?.has(project.id);
+            return `<article class="home-project-card reveal">
+              <h4>${escapeHtml(project.name)}</h4>
+              ${fields.length ? `<dl>${fields.map(([label, value]) => `<div><dt>${label}</dt><dd>${formatProjectDescription(value)}</dd></div>`).join('')}</dl>` : `<p class="home-project-description">${formatProjectDescription(project.description)}</p>`}
+              <div class="home-project-actions">
+                ${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">查看完整项目 <span aria-hidden="true">↗</span></a>` : '<span class="home-project-unavailable">暂无公开链接</span>'}
+                ${preview ? `<button type="button" data-project-preview="${escapeHtml(project.id)}" aria-label="预览${escapeHtml(project.name)}成果">预览成果</button>` : ''}
+              </div>
+              ${href && requiresProjectAccess(href) ? '<p class="project-access-note">完整项目需申请访问权限</p>' : ''}
+            </article>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}
   `;
 }
 
@@ -178,35 +165,28 @@ function renderNotesSection() {
 
   const featuredIds = Array.isArray(portfolioData.featuredNotes) ? portfolioData.featuredNotes : [];
   const allNotes = Array.isArray(portfolioData.notes) ? portfolioData.notes : [];
-  const notesById = new Map(allNotes.map((note) => [note.id, note]));
-  const previewNotes = [...featuredIds]
-    .reverse()
-    .map((id) => notesById.get(id))
-    .filter(Boolean)
-    .slice(0, 3);
-
-  if (!previewNotes.length) {
+  if (!allNotes.length) {
     el.style.display = 'none';
     return;
   }
 
   el.style.display = '';
   el.innerHTML = `
-    <div class="section-header notes-header">
-      <h2 class="section-title">推荐笔记</h2>
-      <a href="notes.html" class="notes-all-link">查看全部笔记 →</a>
+    <div class="home-section-intro reveal">
+      <h2 id="notesHeading">笔记</h2>
+      <p>记录数据分析与 AI 学习，<br>沉淀方法与思考。</p>
     </div>
-    <div class="notes-preview-grid">
-      ${previewNotes.map(note => {
-        const tags = Array.isArray(note.tags) ? note.tags : [];
-        const noteHref = note.url ? escapeUrl(note.url) : 'notes.html';
-        const noteTarget = note.url ? ' target="_blank" rel="noopener"' : '';
+    <div class="home-notes-list">
+      ${allNotes.map(note => {
+        const noteHref = escapeUrl(note.url);
+        const icon = featuredIds.includes(note.id) ? 'note-featured.svg' :
+          /ai|agent|skills|mcp|模型/i.test([note.category, ...(note.tags || [])].join(' ')) ? 'note-ai.svg' : 'note-default.svg';
         return `
-          <a class="note-preview-card" href="${escapeHtml(noteHref)}"${noteTarget}>
-            <span class="note-preview-tag">${escapeHtml(tags.length > 0 ? tags[0] : '笔记')}</span>
-            <h3 class="note-preview-title">${escapeHtml(note.title)}</h3>
-            <p class="note-preview-excerpt">${escapeHtml(note.excerpt || '')}</p>
-          </a>
+          <${noteHref ? 'a' : 'div'} class="home-note-row reveal" ${noteHref ? `href="${escapeHtml(noteHref)}" target="_blank" rel="noopener"` : ''}>
+            <span class="home-note-icon"><img src="assets/notes-icons/${icon}" alt="" width="28" height="28" loading="lazy"></span>
+            <div class="home-note-copy"><h3>${escapeHtml(note.title)}</h3><p>${escapeHtml(note.excerpt || '')}</p></div>
+            ${noteHref ? '<span class="home-note-arrow" aria-hidden="true">↗</span>' : '<span class="home-note-unavailable">暂无公开链接</span>'}
+          </${noteHref ? 'a' : 'div'}>
         `;
       }).join('')}
     </div>
@@ -278,13 +258,63 @@ function renderNotesSection() {
   }, 300);
 } */
 
+function initHomeNavigation() {
+  const navbar = document.querySelector('.navbar');
+  const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'));
+  const sections = links.map((link) => document.querySelector(link.getAttribute('href')));
+  let lastY = window.scrollY;
+  let queued = false;
+
+  function update() {
+    queued = false;
+    const y = Math.max(0, window.scrollY);
+    const readingLine = y + Math.min(window.innerHeight * 0.3, 240);
+    let active = 0;
+    sections.forEach((section, index) => {
+      if (section && section.offsetHeight && section.getBoundingClientRect().top + y <= readingLine) active = index;
+    });
+    if (y > 0 && y + window.innerHeight >= document.documentElement.scrollHeight - 4) active = links.length - 1;
+    links.forEach((link, index) => {
+      link.classList.toggle('active', index === active);
+      if (index === active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    if (y < 100) navbar.classList.remove('nav-hidden');
+    else if (Math.abs(y - lastY) >= 8) navbar.classList.toggle('nav-hidden', y > lastY && y > 160);
+    if (Math.abs(y - lastY) >= 8 || y < 100) lastY = y;
+  }
+  function schedule() {
+    if (!queued) {
+      queued = true;
+      requestAnimationFrame(update);
+    }
+  }
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  document.addEventListener('click', (event) => {
+    if (!event.defaultPrevented && event.target.closest?.('a[href^="#"]') && 'scrollRestoration' in history) {
+      history.scrollRestoration = 'auto';
+    }
+  }, { capture: true });
+  navbar.addEventListener('focusin', () => navbar.classList.remove('nav-hidden'));
+  update();
+}
+
 async function bootstrapHome() {
   const dataResult = await PortfolioFirebase.loadPortfolioData();
   if (dataResult.ok) {
     portfolioData = dataResult.data;
     renderFeaturedProjects();
     renderNotesSection();
-    requestAnimationFrame(() => initScrollReveal());
+    requestAnimationFrame(() => {
+      if (window.__shineReload) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      initScrollReveal();
+      if (!window.__shineReload && !window.__shineBackForward && location.hash) {
+        const target = document.getElementById(location.hash.slice(1));
+        if (target) target.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }
+      window.dispatchEvent(new Event('scroll'));
+    });
     return;
   }
 
@@ -292,7 +322,9 @@ async function bootstrapHome() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  window.HomeMotion?.initHero();
   initTypewriter();
+  initHomeNavigation();
 
   bootstrapHome().catch((error) => {
     renderHomeError(`页面初始化失败：${error && error.message ? error.message : '未知错误'}`);

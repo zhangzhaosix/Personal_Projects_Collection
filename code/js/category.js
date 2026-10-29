@@ -195,6 +195,7 @@ function renderProjectCard(project, localIndex, accent) {
       ${project.url ? `
         <div class="card-footer">
           <a href="${escapeUrl(project.url)}" target="_blank" rel="noopener" class="project-link-btn" draggable="false" onclick="event.stopPropagation();">访问</a>
+          ${requiresProjectAccess(escapeUrl(project.url)) ? '<p class="project-access-note">完整项目需申请访问权限</p>' : ''}
         </div>
       ` : ''}
       ${isAdminMode ? `

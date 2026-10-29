@@ -100,16 +100,6 @@ function showToast(message, type = 'success', duration = 3000) {
   }, duration);
 }
 
-function getFilteredNotes() {
-  const query = (document.getElementById('notesSearchInput')?.value || '').trim().toLowerCase();
-  if (!query) return allNotes;
-  return allNotes.filter((note) => {
-    const title = note.title.toLowerCase();
-    const excerpt = note.excerpt.toLowerCase();
-    return title.includes(query) || excerpt.includes(query);
-  });
-}
-
 /* --- Admin auth --- */
 function isSignedInAdmin() {
   return PortfolioFirebase.isAdminUser(PortfolioFirebase.getAuthReady()?.currentUser) &&
@@ -360,15 +350,13 @@ function renderNotes() {
   const grid = document.getElementById('notesGrid');
   if (!grid) return;
 
-  const filtered = getFilteredNotes();
   const start = (currentPage - 1) * PAGE_SIZE;
   const end = start + PAGE_SIZE;
-  const pageNotes = filtered.slice(start, end);
+  const pageNotes = allNotes.slice(start, end);
   const featuredNotes = Array.isArray(portfolioData?.featuredNotes) ? portfolioData.featuredNotes : [];
 
-  if (!filtered.length) {
-    const query = (document.getElementById('notesSearchInput')?.value || '').trim();
-    grid.innerHTML = renderEmptyState(query ? '没有找到匹配的笔记' : '暂无笔记，敬请期待');
+  if (!allNotes.length) {
+    grid.innerHTML = renderEmptyState('暂无笔记，敬请期待');
     return;
   }
 
@@ -400,8 +388,7 @@ function renderNotes() {
 function renderPagination() {
   const container = document.getElementById('notesPagination');
   if (!container) return;
-  const filtered = getFilteredNotes();
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const totalPages = Math.ceil(allNotes.length / PAGE_SIZE);
   if (totalPages <= 1) { container.innerHTML = ''; return; }
 
   let html = `<button type="button" class="page-btn" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''}>← 上一页</button>`;
@@ -442,16 +429,6 @@ function renderAll() {
   renderPagination();
 }
 
-function initSearch() {
-  const input = document.getElementById('notesSearchInput');
-  if (!input) return;
-  let timer;
-  input.addEventListener('input', () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { currentPage = 1; renderAll(); }, 300);
-  });
-}
-
 function initBackToTop() {
   const btn = document.getElementById('backToTop');
   if (!btn) return;
@@ -488,7 +465,6 @@ async function bootstrapNotes() {
   }
 
   renderAll();
-  initSearch();
 }
 
 // Expose globals

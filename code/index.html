@@ -4,24 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shine · 作品集</title>
+  <script>
+    (() => {
+      const entry = performance.getEntriesByType('navigation')[0];
+      window.__shineReload = entry ? entry.type === 'reload' : performance.navigation?.type === 1;
+      window.__shineBackForward = entry ? entry.type === 'back_forward' : performance.navigation?.type === 2;
+      if ('scrollRestoration' in history) history.scrollRestoration = window.__shineReload ? 'manual' : 'auto';
+      if (!window.__shineReload) return;
+      // 刷新从首屏重新开始；正常直达锚点和历史返回沿用浏览器行为。
+      document.documentElement.style.overflowAnchor = 'none';
+      if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      window.addEventListener('pagehide', () => { history.scrollRestoration = 'auto'; });
+    })();
+  </script>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20261029-2">
+  <link rel="stylesheet" href="css/project-preview.css?v=20261029-3">
+  <link rel="stylesheet" href="css/home-motion.css?v=20261029-1">
 </head>
-<body>
+<body class="home-body">
+  <a class="skip-link" href="#featuredSection">跳到作品</a>
   <!-- 导航栏 -->
-  <nav class="navbar">
+  <nav class="navbar" aria-label="主导航">
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo">Shine</a>
+      <a href="#home" class="nav-logo">Shine</a>
       <div class="nav-links">
-        <a href="index.html" class="nav-item active" aria-current="page">首页</a>
-        <a href="works.html" class="nav-item">作品</a>
-        <a href="notes.html" class="nav-item">笔记</a>
-        <a href="contact.html" class="nav-item">联系</a>
+        <a href="#home" class="nav-item active" aria-current="location">首页</a>
+        <a href="#featuredSection" class="nav-item">作品</a>
+        <a href="#notesSection" class="nav-item">笔记</a>
+        <a href="#contactSection" class="nav-item">联系</a>
       </div>
     </div>
   </nav>
 
-  <div class="home-page">
+  <main class="home-page" id="home">
     <!-- Hero 首屏 -->
     <section class="hero-section" aria-labelledby="heroName">
       <div class="hero-portrait" role="img" aria-label="暖金色 ASCII 字符人物头像">
@@ -32,10 +49,10 @@
         <canvas id="asciiPortrait" width="1122" height="1402" aria-hidden="true"></canvas>
       </div>
       <div class="hero-intro">
-        <p class="hero-focus">数据分析 · AI 实践</p>
         <h1 class="hero-name" id="heroName">Shine</h1>
+        <p class="hero-focus">数据分析 · AI 实践</p>
         <p class="hero-tagline">
-          项目记录成长|笔记沉淀思考
+          项目记录成长，笔记沉淀思考
         </p>
         <p class="hero-description">
           从电商数据治理、投放分析，到 AI 工具实践。<br>
@@ -43,30 +60,61 @@
         </p>
 
         <!-- 打字机轮播 -->
-        <div class="typewriter-wrapper">
+        <div class="typewriter-wrapper" aria-label="多做少想，持续行动">
           <span class="typewriter-prefix" aria-hidden="true">
             <svg class="typewriter-prefix-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <path d="m12 3 1.2 4.3a4.7 4.7 0 0 0 3.3 3.3L21 12l-4.5 1.4a4.7 4.7 0 0 0-3.3 3.3L12 21l-1.2-4.3a4.7 4.7 0 0 0-3.3-3.3L3 12l4.5-1.4a4.7 4.7 0 0 0 3.3-3.3L12 3Z"/>
             </svg>
           </span>
-          <span class="typewriter-text" id="typewriterText"></span>
-          <span class="typewriter-cursor">|</span>
+          <span class="typewriter-text" id="typewriterText" aria-hidden="true">多做少想！</span>
+          <span class="typewriter-cursor" aria-hidden="true">|</span>
         </div>
       </div>
     </section>
 
-    <!-- 精选作品 -->
-    <div class="featured-section reveal" id="featuredSection">
+    <!-- 作品 -->
+    <section class="home-works home-block" id="featuredSection" aria-labelledby="worksHeading" tabindex="-1">
       <!-- 由 JS 动态渲染 -->
-    </div>
+    </section>
 
-    <!-- 推荐笔记 -->
-    <div class="home-section reveal" id="notesSection">
+    <!-- 笔记 -->
+    <section class="home-notes home-block" id="notesSection" aria-labelledby="notesHeading">
       <!-- 由 JS 动态渲染 -->
-    </div>
+    </section>
 
-    <!-- 页脚 -->
-    <footer class="contact-section" id="contactSection">
+    <section class="home-contact home-block" id="contactSection" aria-labelledby="contactHeading">
+      <div class="home-section-intro reveal">
+        <h2 id="contactHeading">联系</h2>
+        <p>关于项目细节，欢迎通过邮箱或微信联系。</p>
+      </div>
+      <div class="contact-list reveal">
+        <div class="contact-row">
+          <div class="contact-details">
+            <span class="contact-label">QQ 邮箱</span>
+            <a id="contactQqEmail" class="contact-value contact-value-link" href="mailto:1801327763@qq.com">1801327763@qq.com</a>
+          </div>
+          <button type="button" class="btn btn-outline contact-copy" data-copy-target="contactQqEmail" data-copy-label="QQ 邮箱" aria-label="复制 QQ 邮箱">复制邮箱</button>
+        </div>
+        <div class="contact-row">
+          <div class="contact-details">
+            <span class="contact-label">Gmail 邮箱</span>
+            <a id="contactGmail" class="contact-value contact-value-link" href="mailto:zhangzhaosix@gmail.com">zhangzhaosix@gmail.com</a>
+          </div>
+          <button type="button" class="btn btn-outline contact-copy" data-copy-target="contactGmail" data-copy-label="Gmail 邮箱" aria-label="复制 Gmail 邮箱">复制邮箱</button>
+        </div>
+        <div class="contact-row">
+          <div class="contact-details">
+            <span class="contact-label">个人微信</span>
+            <span id="contactWechat" class="contact-value">zhangzhaosix</span>
+          </div>
+          <button type="button" class="btn btn-outline contact-copy" data-copy-target="contactWechat" data-copy-label="微信号" aria-label="复制微信号">复制微信</button>
+        </div>
+        <p id="contactCopyStatus" class="contact-copy-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+    <footer class="contact-section home-footer">
       <div class="contact-inner">
         <a href="mailto:1801327763@qq.com" class="contact-link" title="发送邮件">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
@@ -75,11 +123,13 @@
         <span class="contact-copyright">© 2026 Shine</span>
       </div>
     </footer>
-  </div>
 
   <script src="js/firebase-portfolio.js"></script>
-  <script src="js/project-text.js"></script>
-  <script src="js/app.js?v=20261026-1"></script>
+  <script src="js/project-text.js?v=20261029-2"></script>
+  <script src="js/project-preview.js?v=20261029-8"></script>
+  <script src="js/home-motion.js?v=20261029-1"></script>
+  <script src="js/app.js?v=20261029-2"></script>
+  <script src="js/contact.js"></script>
   <script src="js/ascii-avatar.js?v=20261026-2"></script>
 </body>
 </html>
